@@ -105,6 +105,9 @@ AC_INIT([MPICH],
         [discuss@mpich.org],
         [mpich],
         [http://www.mpich.org/])
+dnl for the purpose of reuse macros with hydra etc.
+m4_define([INSIDE_MPICH],[1])
+PAC_SUBDIR_INIT
 
 if test "x$prefix" != "xNONE" && test -d "$prefix"; then 
     if test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x`(cd \"$srcdir\"; echo \"$PWD\")`" ||\
@@ -436,10 +439,6 @@ AC_ARG_ENABLE(fc,
 AC_ARG_ENABLE(cxx,
 	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
-AC_ARG_ENABLE(romio,
-	AC_HELP_STRING([--enable-romio], [Enable ROMIO MPI I/O implementation]),,
-	enable_romio=yes)
-
 AC_ARG_ENABLE(debuginfo,
 	AC_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
 	enable_debuginfo=no)
@@ -623,10 +622,6 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
     ac_cv_prog_cxx_cross=yes
 fi
 PAC_POP_FLAG([CFLAGS])
-
-# also needed by hwloc in embedded mode, must also come early for expansion
-# ordering reasons
-AC_USE_SYSTEM_EXTENSIONS
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
@@ -815,8 +810,6 @@ export LIBS
 export MPILIBNAME
 export PMPILIBNAME
 export RANLIB
-export OPALIBNAME
-export MPLLIBNAME
 # ----------------------------------------------------------------------------
 # with-device
 if test "$with_device" = "default" ; then
@@ -1172,254 +1165,15 @@ if test "$MPID_NO_SPAWN" = yes ; then
     AC_MSG_WARN([The device $with_device does not support MPI dynamic process routines])   
 fi
 
-# MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR,
-                             rather than the one included in src/mpl.  Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
-mplsrcdir=""
-AC_SUBST([mplsrcdir])
-mpllibdir=""
-AC_SUBST([mpllibdir])
-mpllib=""
-AC_SUBST([mpllib])
-if test "$with_mpl_prefix" = "embedded" ; then
-    # no need for libtool versioning when embedding MPL
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+# 
+PAC_SUBDIR_MPL([src/mpl])
+PAC_SUBDIR_OPA([src/openpa])
 
-    mplsrcdir="src/mpl"
-    mpllib="src/mpl/lib${MPLLIBNAME}.la"
-else
-    # The user specified an already-installed MPL; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
-          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
-    PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
-    mpllibdir="-L${with_mpl_prefix}/lib"
-fi
+PAC_SUBDIR_ENABLE_IZEM
+PAC_SUBDIR_IZEM([src/izem])
 
-# OpenPA
-AC_ARG_VAR([OPALIBNAME],[can be used to override the name of the OpenPA library (default: "opa")])
-OPALIBNAME=${OPALIBNAME:-"opa"}
-export OPALIBNAME
-AC_SUBST(OPALIBNAME)
-AC_ARG_WITH([openpa-prefix],
-            [AS_HELP_STRING([[--with-openpa-prefix[=DIR]]],
-                            [use the OpenPA atomics library installed in DIR,
-                             rather than the one included in src/openpa.  Pass
-                             "embedded" to force usage of the OpenPA source
-                             distributed with MPICH.])],
-            [],
-            [# see if OPA is already installed on the system
-             PAC_PUSH_FLAG([LIBS])
-             PAC_PREPEND_FLAG([-l${OPALIBNAME}],[LIBS])
-             AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
-#include "opa_primitives.h"
-],[
-OPA_int_t i;
-OPA_store_int(i,10);
-OPA_fetch_and_incr_int(&i,5);
-])dnl
-                             ],
-                            [with_openpa_prefix=system],[with_openpa_prefix=embedded])
-             PAC_POP_FLAG([LIBS])
-             ])
-
-opasrcdir=""
-AC_SUBST([opasrcdir])
-opalibdir=""
-AC_SUBST([opalibdir])
-opalib=""
-AC_SUBST([opalib])
-
-if test "$with_openpa_prefix" = "embedded" ; then
-    if test -e "${use_top_srcdir}/src/openpa" ; then
-        opasrcdir="src/openpa"
-        opalib="src/openpa/src/lib${OPALIBNAME}.la"
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
-
-        # OPA defaults to "auto", but in MPICH we want "auto_allow_emulation" to
-        # easily permit using channels like ch3:sock that don't care about atomics
-        AC_ARG_WITH([atomic-primitives],
-                    [AS_HELP_STRING([--with-atomic-primitives],
-                                    [Force OPA to use a specific atomic primitives
-                                     implementation.  See the src/openpa directory
-                                     for more info.])],
-                    [],[with_atomic_primitives=not_specified])
-        # no need for libtool versioning when embedding OPA
-        opa_subdir_args="--disable-versioning --enable-embedded"
-        if test "$with_atomic_primitives" = "not_specified" ; then
-            PAC_APPEND_FLAG([--with-atomic-primitives=auto_allow_emulation], [opa_subdir_args])
-        fi
-        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
-    else
-        AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
-    fi
-elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-elif test "$with_openpa_prefix" = "no" ; then
-    # The user doesn't want to use OPA.  This may or may not cause MPICH to
-    # fail to configure/build, depending on many other factors.
-    :
-else
-    # The user specified an already-installed OPA; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
-          [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-    if test -d ${with_openpa_prefix}/lib64 ; then
-        PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
-        opalibdir="-L${with_openpa_prefix}/lib64"
-    else
-        opalibdir="-L${with_openpa_prefix}/lib"
-    fi
-    PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
-fi
-
-# Izem
-
-AC_ARG_ENABLE([izem],
-[  --enable-izem@<:@=ARGS@:>@   Enable features from the Izem library.
-                          "ARGS" is a list of comma separated features.
-                          Accepted arguments are:
-			  sync     - use the Izem interface for sychronization objects
-                                     (locks and condition variables) instead of the MPL interface
-                          queue    - use the Izem interface for atomic queue objects
-                          atomic   - use the Izem interface for CPU atomics
-                          yes/all  - all of the above features are enabled
-                          no/none  - none of the above features are enabled],,
-[enable_izem=no])
-
-# strip off multiple options, separated by commas
-save_IFS="$IFS"
-IFS=","
-for option in $enable_izem ; do
-    case "$option" in
-        sync)
-            izem_sync=yes
-        ;;
-        queue)
-            izem_queue=yes
-        ;;
-        atomic)
-            izem_atomic=yes
-        ;;
-        yes|all)
-            izem_sync=yes
-            izem_queue=yes
-            izem_atomic=yes
-        ;;
-        no|none)
-        ;;
-        *)
-            AC_MSG_ERROR([Unknown value $option for enable-izem])
-        ;;
-    esac
-done
-IFS="$save_IFS"
-
-if test "$izem_sync" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_SYNC,1,[Define to enable using Izem locks and condition variables])
-fi
-
-if test "$izem_queue" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_QUEUE,1,[Define to enable using Izem queues])
-fi
-
-if test "$izem_atomic" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_ATOMIC,1,[Define to enable using Izem CPU atomics])
-fi
-
-AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
-ZMLIBNAME=${ZMLIBNAME:-"zm"}
-export ZMLIBNAME
-AC_SUBST(ZMLIBNAME)
-AC_ARG_WITH([zm-prefix],
-[  --with-zm-prefix@<:@=ARG@:>@
-                          specify the Izem library to use. No argument implies "yes".
-                          Accepted values for ARG are:
-                          yes|embedded - use the embedded Izem
-                          system       - search system paths for an Izem installation
-                          no           - disable Izem
-                          <PATH>       - use the Izem at PATH],,
-[with_zm_prefix=no])
-
-zmsrcdir=""
-AC_SUBST([zmsrcdir])
-zmlibdir=""
-AC_SUBST([zmlibdir])
-zmlib=""
-AC_SUBST([zmlib])
-
-if test "$enable_izem" != "no" && test "$enable_izem" != "none"; then
-    if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
-        if test -e "${use_top_srcdir}/src/izem" ; then
-            zm_subdir_args="--enable-embedded"
-            PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
-            zmsrcdir="${master_top_builddir}/src/izem"
-            zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
-            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src/include],[CPPFLAGS])
-        else
-            AC_MSG_WARN([Attempted to use the embedded Izem source tree in "src/izem", but it is missing.  Configuration or compilation may fail later.])
-        fi
-    elif test "$with_zm_prefix" = "system"; then
-        # check if an Izem installation exists on this system
-        PAC_PUSH_FLAG([LIBS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
-                                        ],
-                                        [zm_ticket_t lock;
-                                         zm_ticket_init(&lock);
-                                         zm_ticket_acquire(&lock);
-                                         zm_ticket_release(&lock);])],
-                       [AC_MSG_ERROR([No usable Izem installation was found on this system])],
-                       [PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])])
-        PAC_POP_FLAG([LIBS])
-    elif test "$with_zm_prefix" = "no"; then
-        AC_MSG_ERROR([Izem features were requested with --enable-izem but Izem was disabled.])
-    else
-        # The user specified an already-installed Izem; just sanity check, don't
-        # subconfigure it
-
-        AS_IF([test -s "${with_zm_prefix}/include/lock/zm_lock.h" -a -s "${with_zm_prefix}/include/cond/zm_cond.h"],
-              [:],[AC_MSG_ERROR([Izem headers at "${with_zm_prefix}/include" are missing])])
-        PAC_APPEND_FLAG([-I${with_zm_prefix}/include],[CPPFLAGS])
-
-        PAC_PUSH_FLAG([LIBS])
-        PAC_PUSH_FLAG([LDFLAGS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
-        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[LDFLAGS])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
-                                        ],
-                                        [zm_ticket_t lock;
-                                         zm_ticket_init(&lock);
-                                         zm_ticket_acquire(&lock);
-                                         zm_ticket_release(&lock);])],
-                       [],[AC_MSG_ERROR([The Izem installation at "${with_zm_prefix}" seems broken])])
-        PAC_POP_FLAG([LIBS])
-        PAC_POP_FLAG([LDFLAGS])
-        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[WRAPPER_LDFLAGS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])
-        zmlibdir="-L${with_zm_prefix}/lib"
-    fi
-fi
-
+PAC_SUBDIR_ENABLE_ROMIO
+PAC_SUBDIR_ROMIO([src/mpi/romio])
 
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
 # and -lp$MPILIBNAME.
@@ -1446,115 +1200,10 @@ if test "$NEEDSPLIB" = "yes" ; then
     VISIBILITY_CFLAGS=""
 fi
 
-
-# ----------------------------------------------------------------------------
-# HWLOC
-# ----------------------------------------------------------------------------
-# Allow the user to override the hwloc location (from embedded to user
-# path)
-# HWLOC
-AC_ARG_WITH([hwloc-prefix],
-            [AS_HELP_STRING([[--with-hwloc-prefix[=DIR]]],
-                            [use the HWLOC library installed in DIR,
-                             rather than the one included in src/hwloc.  Pass
-                             "embedded" to force usage of the HWLOC source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_hwloc_prefix=embedded]) dnl action-if-not-given
-hwlocsrcdir=""
-AC_SUBST([hwlocsrcdir])
-hwloclibdir=""
-AC_SUBST([hwloclibdir])
-hwloclib=""
-AC_SUBST([hwloclib])
-
-if test "$with_hwloc_prefix" = "embedded" ; then
-   # Disable visibility when setting up hwloc
-   PAC_PUSH_FLAG([enable_visibility])
-   enable_visibility=no;
-   HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
-   # Only build hwloc in embedded mode
-   if test "$have_hwloc" = "yes" ; then
-      use_embedded_hwloc=yes
-      hwlocsrcdir="src/hwloc"
-      hwloclib="$HWLOC_EMBEDDED_LDADD"
-      PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
-      # if possible, do not expose hwloc symbols in libmpi.so
-      PAC_PREPEND_FLAG([$VISIBILITY_CFLAGS], [HWLOC_CFLAGS])
-   fi
-   PAC_POP_FLAG([enable_visibility])
-else
-   AC_CHECK_HEADERS([hwloc.h])
-   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
-   # minimum required version
-   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
-   AC_MSG_CHECKING([if non-embedded hwloc works])
-   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
-      have_hwloc=yes
-   else
-      have_hwloc=no
-   fi
-   AC_MSG_RESULT([$have_hwloc])
-
-   # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
-   # atleast as of 1.0.2, does not install correctly on Cygwin
-   AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
-
-   if test "$have_hwloc" = "yes" ; then
-      hwloclib="-lhwloc"
-      if test -d ${with_hwloc_prefix}/lib64 ; then
-         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-         hwloclibdir="-L${with_hwloc_prefix}/lib64"
-      else
-	 hwloclibdir="-L${with_hwloc_prefix}/lib"
-      fi
-   fi
-fi
-
+# FIXME: Why this not grouped with mpl, openpa, etc.?
+PAC_SUBDIR_HWLOC([src/hwloc])
 if test "$have_hwloc" = "yes" ; then
-   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-fi
-
-HWLOC_DO_AM_CONDITIONALS
-AM_CONDITIONAL([have_hwloc], [test "${have_hwloc}" = "yes"])
-AM_CONDITIONAL([use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
-
-# ----------------------------------------------------------------------------
-# NETLOC
-# ----------------------------------------------------------------------------
-AC_ARG_WITH([netloc-prefix],
-            [AS_HELP_STRING([[--with-netloc-prefix[=DIR]]],
-                            [use the NETLOC library installed in DIR]) or system to use the system library], [],
-                            [with_netloc_prefix=no])
-
-netloclibdir=""
-AC_SUBST([netloclibdir])
-
-if test "$have_hwloc" = "yes" ; then
-    if test "${with_netloc_prefix}" != "no" ; then
-        if test "${with_netloc_prefix}" != "system"; then
-            # The user specified an already-installed Netloc; just sanity check,
-            # don't subconfigure it
-            AS_IF([test -s "${with_netloc_prefix}/include/netloc.h"],
-              [:],[AC_MSG_ERROR([the Netloc installation in "${with_netloc_prefix}" appears broken])])
-            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CFLAGS])
-            PAC_PREPEND_FLAG([-lnetloc],[WRAPPER_LIBS])
-            if test -d ${with_netloc_prefix}/lib64 ; then
-                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-                netloclibdir="-L${with_netloc_prefix}/lib64"
-            else
-                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib],[WRAPPER_LDFLAGS])
-                netloclibdir="-L${with_netloc_prefix}/lib"
-            fi
-       else
-           AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "netloc.h"
-                                   ],
-                                   [])],
-                          [AC_MSG_ERROR([the Netloc installation seems to be added from system path])], [])
-       fi
-       AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available in either user specified path or in system path])
-    fi
+    PAC_EXTERNAL_NETLOC
 fi
 
 # ----------------------------------------------------------------------------
@@ -1814,36 +1463,6 @@ if test "$with_cross" != "no" ; then
 	rm -f confcross      
     fi
 fi
-
-# This goes here because we need the top_srcdir
-if test "$enable_romio" = "yes" ; then
-   if test -d $use_top_srcdir/src/mpi/romio ; then
-       subsystems="$subsystems src/mpi/romio"
-       AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
-
-       # make it possible to "#include" mpio.h at build time
-       #
-       # This ought to be sufficient, but there is also a symlink setup in
-       # src/include to accomodate current mpicc limitations.  See
-       # src/mpi/Makefile.mk for more info.
-       PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
-
-       # Set environment variables that the romio configure expects
-       export use_top_srcdir
-       top_build_dir=`pwd`
-       export top_build_dir
-       # if there is no $top_build_dir/lib, romio puts lib in wrong place
-       # This test used -e under Linux, but not all test programs understand
-       # -e
-       if test ! -d lib ; then mkdir lib ; fi
-       # tell mpi.h to include mpio.h
-       PAC_HAVE_ROMIO
-   else
-       AC_MSG_WARN([ROMIO src directory is not available])
-   fi
-fi
-
-AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,
@@ -5171,17 +4790,9 @@ m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
 # now configure any actual recursively configures subsystems, such as ROMIO and
 # hydra, or older components that haven't been updated to a subconfigure.m4 yet
-for subsys in $devsubsystems $subsystems ; do 
-    PAC_CONFIG_SUBDIR([$subsys],[],[AC_MSG_ERROR([$subsys configure failed])])
-done 
-if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then 
-    set +x
-fi
-dnl PAC_SUBDIR_CACHE_CLEANUP
 
-# Make subsystems available to makefiles.
-# FIXME does the makefile actually need this?
-subsystems="$devsubsystems $subsystems $bindingsubsystems"
+subsystem="$subsystem test/mpi"
+PAC_CONFIG_ALL_SUBDIRS([$devsubsystems $subsystems])
 
 # Find the size of OPA_ptr_t. This step needs to come after the OPA
 # configure above in order to get the size OPA_ptr_t evaluated for
@@ -5530,7 +5141,6 @@ PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpif90", MPIF90_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 
-AC_CONFIG_SUBDIRS([test/mpi])
 dnl
 dnl Generate the Makefiles from Makefile.in
 dnl Also generate mpi.h from mpi.h.in so that we can eliminate all ifdefs
