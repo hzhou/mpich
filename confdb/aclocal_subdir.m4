@@ -85,6 +85,15 @@ AC_DEFUN([PAC_CONFIG_ALL_SUBDIRS],[
     dnl subsystems="$devsubsystems $subsystems $bindingsubsystems"
 ])
 
+AC_DEFUN([PAC_CONFIG_ALL_PARALLEL], [
+    all="m4_default([$1], [$subsystems])"
+    romio_config_arg="--with-mpl-prefix=../../mpl"
+    hydra_config_arg="--with-mpl-prefix=../../mpl --with-hwloc-prefix=../../hwloc"
+    export romio_config_arg hydra_config_arg
+    j=m4_default([$2], 2)
+    perl maint/subdir_config.pl -j$j $all
+])
+
 dnl ****************************************
 dnl Apparently we need allow the possiblity of library under custom name.
 dnl PAC_SUBDIR_LIBNAME([var], [default])

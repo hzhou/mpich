@@ -4786,7 +4786,13 @@ m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 # hydra, or older components that haven't been updated to a subconfigure.m4 yet
 
 subsystem="$subsystem test/mpi"
-PAC_CONFIG_ALL_SUBDIRS([$devsubsystems $subsystems])
+
+AC_ARG_ENABLE(j, [  --enable-j=num - Enable parallel configure of subdirs.],,enable_j=1)
+if test "enable_j" == 1 ; then
+    PAC_CONFIG_ALL_SUBDIRS([$devsubsystems $subsystems])
+else
+    PAC_CONFIG_ALL_PARALLEL([$devsubsystems $subsystems], $enable_j)
+fi
 
 # Find the size of OPA_ptr_t. This step needs to come after the OPA
 # configure above in order to get the size OPA_ptr_t evaluated for
