@@ -229,6 +229,40 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
     goto fn_exit;
 }
 
+static HYD_status pmi_ipv4_list(struct HYD_pg *pg, char **ipv4_list)
+{
+    HYD_status status = HYD_SUCCESS;
+    struct HYD_string_stash stash;
+    struct HYD_proxy *proxy;
+
+    if (pg->proxy_list->next == NULL){
+        *ipv4_list = MPL_strdup("127.0.0.1");
+        goto fn_exit;
+    }
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        struct hostent *host;
+        host = gethostbyname(proxy->node->hostname);
+        if (host){
+            char buf[20];
+            unsigned char *s = (unsigned char *)host->h_addr_list[0];
+            snprintf(buf, 20, "%d.%d.%d.%d", s[0], s[1], s[2], s[3]);
+            HYD_STRING_STASH(stash, MPL_strdup(buf), status);
+        } else {
+            HYD_STRING_STASH(stash, MPL_strdup("127.0.0.1"), status);
+        }
+        if (proxy->next)
+            HYD_STRING_STASH(stash, MPL_strdup(","), status);
+    }
+    HYD_STRING_SPIT(stash, *ipv4_list, status);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int i, inherited_env_count, user_env_count, system_env_count, exec_count;
@@ -251,6 +285,14 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     if (strlen(mapping) > PMI_MAXVALLEN) {
         MPL_free(mapping);
         mapping = NULL;
+    }
+
+    /* hack: ipv4 list */
+    char *ipv4_list = NULL;
+    status = pmi_ipv4_list(pg, &ipv4_list);
+    if (strlen(ipv4_list) > PMI_MAXVALLEN) {
+        MPL_free(ipv4_list);
+        ipv4_list = NULL;
     }
 
     /* Create the arguments list for each proxy */
@@ -348,6 +390,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-process-mapping"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(mapping), status);
+
+        HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-ipv4-list"), status);
+        HYD_STRING_STASH(exec_stash, MPL_strdup(ipv4_list), status);
 
         if (proxy->node->local_binding) {
             HYD_STRING_STASH(exec_stash, MPL_strdup("--binding"), status);

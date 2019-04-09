@@ -38,6 +38,7 @@ struct HYD_pmcd_pmip_s {
         char *pmi_fd;
         int pmi_rank;           /* If this is -1, we auto-generate it */
         char *pmi_process_mapping;
+        char *pmi_ipv4_list;
     } system_global;            /* Global system parameters */
 
     struct {

@@ -28,6 +28,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.system_global.pmi_fd = NULL;
     HYD_pmcd_pmip.system_global.pmi_rank = -1;
     HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
+    HYD_pmcd_pmip.system_global.pmi_ipv4_list = NULL;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
@@ -69,6 +70,8 @@ static void cleanup_params(void)
     MPL_free(HYD_pmcd_pmip.system_global.pmi_fd);
     MPL_free(HYD_pmcd_pmip.system_global.pmi_process_mapping);
 
+    if (HYD_pmcd_pmip.system_global.pmi_ipv4_list)
+        MPL_free(HYD_pmcd_pmip.system_global.pmi_ipv4_list);
 
     /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);

@@ -207,6 +207,15 @@ static HYD_status pmi_process_mapping_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status pmi_ipv4_list_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.system_global.pmi_ipv4_list, **argv);
+    (*argv)++;
+    return status;
+}
+
 static HYD_status binding_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -652,6 +661,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
+    {"pmi-ipv4-list", pmi_ipv4_list_fn, NULL},
     {"topolib", topolib_fn, NULL},
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},

@@ -408,6 +408,18 @@ static HYD_status fn_get(int fd, char *args[])
         status = send_cmd_downstream(fd, cmd);
         HYDU_ERR_POP(status, "error sending PMI response\n");
         MPL_free(cmd);
+    } else if (!strcmp(key, "PMI_ipv4_list")) {
+        HYD_STRING_STASH_INIT(stash);
+        HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc=0 msg=success value="), status);
+        HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.system_global.pmi_ipv4_list),
+                         status);
+        HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+
+        HYD_STRING_SPIT(stash, cmd, status);
+
+        status = send_cmd_downstream(fd, cmd);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
+        MPL_free(cmd);
     } else {
         HASH_FIND_STR(hash_get, key, found);
         if (found) {
