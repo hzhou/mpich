@@ -1179,4 +1179,5 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
                      context_id, idx, bitpos, raw_prefix));
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_FREE_CONTEXTID);
+    return;
 }
