@@ -25,6 +25,23 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static MPL_atomic_int_t next_thread_id = MPL_ATOMIC_INT_T_INITIALIZER(0);
+#if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
+static MPL_TLS int thread_id;
+#else
+static int thread_id;
+#endif
+
+int MPIR_thread_id(void)
+{
+    /* internally thread_id is 1-based so we can tell whether it is valid */
+    if (thread_id == 0) {
+        thread_id = MPL_atomic_fetch_add_int(&next_thread_id, 1) + 1;
+    }
+    /* externally thread_id is 0-based, so it could be used as an index */
+    return (thread_id - 1);
+}
+
 int MPII_init_local_proc_attrs(int *p_thread_required)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -38,6 +55,9 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* We need this inorder to implement IS_THREAD_MAIN */
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     MPID_Thread_self(&MPIR_ThreadInfo.main_thread);
+
+    int main_id = MPIR_thread_id();
+    MPIR_Assert(main_id == 0);
 #endif
 #endif /* MPICH_IS_THREADED */
 
