@@ -36,6 +36,9 @@ int DTP_pool_create(const char *basic_type_str, MPI_Aint basic_type_count, int s
 int DTP_pool_free(DTP_pool_s dtp);
 
 int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize);
+int DTP_obj_create_idx(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize, int rand_idx);
+int DTP_obj_create_custom(DTP_pool_s dtp, DTP_obj_s * obj, const char *desc);
+
 int DTP_obj_free(DTP_obj_s obj);
 int DTP_obj_get_description(DTP_obj_s obj, char **desc);
 
