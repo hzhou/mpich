@@ -241,13 +241,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno =
             MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     } else
 #endif
     {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
                                        context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
@@ -266,16 +270,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     } else
 #endif
     {
         rreq = message;
-
+        int vci = MPIDI_Request_get_vci(rreq);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
         av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
                                        message->status.MPI_TAG, rreq->comm, 0, av,
                                        &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
@@ -296,13 +304,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno =
             MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     } else
 #endif
     {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
                                        context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);

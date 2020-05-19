@@ -252,7 +252,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv(void *buf, MPI_Aint count, MPI_D
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RECV);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     ret = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RECV);
     return ret;
@@ -265,6 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
     MPIR_Comm *root_comm = NULL;
@@ -315,6 +318,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IRECV);
     return mpi_errno;
   fn_fail:
@@ -329,6 +333,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
 
+    int vci = MPIDI_Request_get_vci(message);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
     bool recvd_flag = false;
 
@@ -347,6 +353,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
     return mpi_errno;
   fn_fail:
