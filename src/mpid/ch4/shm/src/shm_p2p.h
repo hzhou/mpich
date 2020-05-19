@@ -102,6 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SEND);
 
+    /* critical section inside MPIDI_SHM_mpi_isend */
     ret = MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SEND);
@@ -135,10 +136,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SSEND);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     ret =
         MPIDI_POSIX_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SSEND);
     return ret;
 }
@@ -152,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISEND);
-
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     bool dt_contig;
@@ -180,6 +183,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISEND);
     return mpi_errno;
   fn_fail:
@@ -214,11 +218,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint coun
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     ret =
         MPIDI_POSIX_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                request);
 
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
     return ret;
 }

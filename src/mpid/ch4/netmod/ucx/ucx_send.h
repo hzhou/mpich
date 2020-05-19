@@ -140,8 +140,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                          addr, request, 0, 0);
+    int mpi_errno;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                               addr, request, 0, 0);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
@@ -152,8 +158,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                          addr, request, 0, 1);
+    int mpi_errno;
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                               addr, request, 0, 1);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
@@ -193,8 +203,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                          addr, request, 1, 0);
+    int mpi_errno;
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                               addr, request, 1, 0);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
@@ -205,8 +219,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
                                                  MPIR_Comm * comm, int context_offset,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                          addr, request, 1, 1);
+    int mpi_errno;
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                               addr, request, 1, 1);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
