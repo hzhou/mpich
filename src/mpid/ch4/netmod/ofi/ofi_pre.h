@@ -205,7 +205,7 @@ typedef struct {
 } MPIDI_OFI_win_t;
 
 typedef struct {
-    fi_addr_t dest;
+    fi_addr_t dest[MPIDI_CH4_MAX_VCIS][MPIDI_CH4_MAX_VCIS];     /* [local_vni][remote_vni] */
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
 #endif
