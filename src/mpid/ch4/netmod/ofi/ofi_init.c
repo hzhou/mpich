@@ -325,6 +325,7 @@ static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
 
 static int addr_exchange_root_vci(MPIR_Comm * init_comm);
+static int addr_exchange_all_vcis(void);
 
 static int get_ofi_version(void)
 {
@@ -1959,6 +1960,63 @@ static int addr_exchange_root_vci(MPIR_Comm * init_comm)
         }
         MPL_free(mapped_table);
         MPIDU_bc_table_destroy();
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int addr_exchange_all_vcis(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int size = MPIR_Process.size;
+    int rank = MPIR_Process.rank;
+    int num_vnis = MPIDI_OFI_global.num_vnis;
+
+    /* get addr name length */
+    size_t name_len = 0;
+    int ret = fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, NULL, &name_len);
+    MPIR_Assert(ret == -FI_ETOOSMALL);
+    MPIR_Assert(name_len > 0);
+
+    int my_len = num_vnis * name_len;
+    char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
+    MPIR_Assert(all_names);
+
+    char *my_names = all_names + rank * my_len;
+
+    /* put in my addrnames */
+    for (int i = 0; i < num_vnis; i++) {
+        size_t actual_name_len;
+        char *vni_addrname = my_names + i * name_len;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[i].ep, vni_addrname,
+                                  &actual_name_len), getname);
+        MPIR_Assert(actual_name_len == name_len);
+    }
+    /* Allgather */
+    MPIR_Comm *comm = MPIR_Process.comm_world;
+    MPIR_Errflag_t errflag;
+    mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_BYTE,
+                                            all_names, my_len, MPI_BYTE, comm, &errflag);
+    /* insert the addresses */
+    fi_addr_t *mapped_table;
+    mapped_table = (fi_addr_t *) MPL_malloc(size * num_vnis * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+    for (int vci_local = 0; vci_local < num_vnis; vci_local++) {
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vci_local].av, all_names, size * num_vnis,
+                                    mapped_table, 0ULL, NULL), avmap);
+        for (int r = 0; r < size; r++) {
+            MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+            for (int vci_remote = 0; vci_remote < num_vnis; vci_remote++) {
+                if (vci_local == 0 && vci_remote == 0) {
+                    /* don't overwrite existing addr, or bad things will happen */
+                    continue;
+                }
+                av->dest[vci_local][vci_remote] = mapped_table[r * num_vnis + vci_remote];
+            }
+        }
     }
 
   fn_exit:
