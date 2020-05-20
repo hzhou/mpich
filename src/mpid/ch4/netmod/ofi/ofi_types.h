@@ -404,6 +404,8 @@ typedef struct {
     int endpoint_id;
     uint64_t rma_key;
     int tag;
+    int vni_src;
+    int vni_dst;
 } MPIDI_OFI_send_control_t;
 
 typedef struct MPIDI_OFI_seg_state {
