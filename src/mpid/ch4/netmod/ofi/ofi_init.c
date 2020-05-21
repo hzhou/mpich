@@ -873,11 +873,11 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
+            fi_addr_t addr;
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
-                                        1,
-                                        (fi_addr_t *) &
-                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                        NULL), avmap);
+                                        1, &addr, 0ULL, NULL), avmap);
+            MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0] = addr;
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #endif
@@ -1937,6 +1937,7 @@ static int addr_exchange_root_vci(MPIR_Comm * init_comm)
                        avmap);
 
         for (int i = 0; i < num_nodes; i++) {
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
@@ -1963,6 +1964,7 @@ static int addr_exchange_root_vci(MPIR_Comm * init_comm)
                        (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL), avmap);
 
         for (int i = 0; i < size; i++) {
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
@@ -2024,7 +2026,9 @@ static int addr_exchange_all_vcis(void)
                     /* don't overwrite existing addr, or bad things will happen */
                     continue;
                 }
-                av->dest[vci_local][vci_remote] = mapped_table[r * num_vnis + vci_remote];
+                int idx = r * num_vnis + vci_remote;
+                MPIR_Assert(mapped_table[idx] != FI_ADDR_NOTAVAIL);
+                av->dest[vci_local][vci_remote] = mapped_table[idx];
             }
         }
     }
