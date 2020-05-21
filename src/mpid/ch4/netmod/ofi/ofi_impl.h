@@ -195,33 +195,6 @@ int MPIDI_OFI_progress(int vci, int blocking);
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
-{
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
-        return 1;       /* Always allocated by netmod */
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
-        return (req == NULL);
-    } else {
-        /* Invalid MT model */
-        MPIR_Assert(0);
-        return -1;
-    }
-}
-
-#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind, vni) \
-      do {                                                              \
-          if (MPIDI_OFI_need_request_creation(req)) {                   \
-              MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
-                          (req) == NULL);                               \
-              (req) = MPIR_Request_create_from_pool(kind, vni);         \
-              MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
-                                  "**nomemreq");                        \
-          }                                                             \
-          /* At this line we should always have a valid request */      \
-          MPIR_Assert((req) != NULL);                                   \
-          MPIR_Request_add_ref((req));                                  \
-      } while (0)
-
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
     if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS)

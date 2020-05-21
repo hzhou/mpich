@@ -27,18 +27,6 @@
     MPIDI_OFI_win_cntr_incr(win);                                       \
     } while (0)
 
-#define MPIDI_OFI_INIT_SIGNAL_REQUEST(win,sigreq,flags)                 \
-    do {                                                                \
-        if (sigreq)                                                     \
-        {                                                               \
-            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA, 0); \
-            *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
-        }                                                               \
-        else {                                                          \
-            *(flags)                    = FI_DELIVERY_COMPLETE;         \
-        }                                                               \
-    } while (0)
-
 #define MPIDI_OFI_GET_BASIC_TYPE(a,b)   \
     do {                                        \
         if (MPIR_DATATYPE_IS_PREDEFINED(a))     \
@@ -167,10 +155,6 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
 {
     if (sigreq) {
-        /* If sigreq is not NULL, *sigreq should be a valid object after
-         * returning from MPIDI_OFI_INIT_SIGNAL_REQUEST(). The allocation of
-         * *sigreq is inside MPIDI_OFI_INIT_SIGNAL_REQUEST() or from upper level,
-         * depending on MPIDI_CH4_MT_MODEL. */
         MPIR_Assert(*sigreq != NULL);
         MPID_Request_complete(*sigreq);
     }
@@ -238,7 +222,20 @@ static inline int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_co
     origin_len = MPL_MIN(total_origin_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
 
-    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+    if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+        if (*sigreq) {
+            MPIR_Request_add_ref(*sigreq);
+        } else
+#endif
+        {
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+        }
+        flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+    } else {
+        flags = FI_DELIVERY_COMPLETE;
+    }
+
     int i = 0, j = 0;
     size_t msg_len;
     while (i < total_origin_iov_len && j < total_target_iov_len) {
@@ -343,7 +340,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     req->noncontig.iov.accumulate.originv = (struct fi_ioc *) req->noncontig.iov_store;
     req->noncontig.iov.accumulate.targetv =
         (struct fi_rma_ioc *) (req->noncontig.iov_store + o_size * alloc_iovs);
-    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
+
+    if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+        if (*sigreq) {
+            MPIR_Request_add_ref(*sigreq);
+        } else
+#endif
+        {
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+        }
+        *flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+    } else {
+        *flags = FI_DELIVERY_COMPLETE;
+    }
+
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
 
@@ -407,7 +418,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
         (struct fi_rma_ioc *) (req->noncontig.iov_store + o_size * alloc_iovs);
     req->noncontig.iov.get_accumulate.resultv =
         (struct fi_ioc *) (req->noncontig.iov_store + (o_size + t_size) * alloc_iovs);
-    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
+
+    if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+        if (*sigreq) {
+            MPIR_Request_add_ref(*sigreq);
+        } else
+#endif
+        {
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+        }
+        *flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+    } else {
+        *flags = FI_DELIVERY_COMPLETE;
+    }
+
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
 
@@ -484,7 +509,19 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     /* large contiguous messages */
     if (origin_contig && target_contig) {
-        MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+        if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+            if (*sigreq) {
+                MPIR_Request_add_ref(*sigreq);
+            } else
+#endif
+            {
+                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+            }
+            flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+        } else {
+            flags = FI_DELIVERY_COMPLETE;
+        }
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         msg.desc = NULL;
         msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
@@ -620,7 +657,19 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         if (sigreq) {
-            MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+            if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+                if (*sigreq) {
+                    MPIR_Request_add_ref(*sigreq);
+                } else
+#endif
+                {
+                    MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+                }
+                flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+            } else {
+                flags = FI_DELIVERY_COMPLETE;
+            }
         } else {
             flags = 0;
         }
