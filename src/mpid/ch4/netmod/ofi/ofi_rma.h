@@ -31,7 +31,7 @@
     do {                                                                \
         if (sigreq)                                                     \
         {                                                               \
-            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
+            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA, 0); \
             *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
         }                                                               \
         else {                                                          \
