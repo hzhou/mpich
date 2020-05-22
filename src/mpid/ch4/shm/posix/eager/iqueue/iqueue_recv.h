@@ -15,8 +15,6 @@
 static void MPIDI_POSIX_eager_iqueue_enqueue_cell(MPIDI_POSIX_eager_iqueue_transport_t * transport,
                                                   MPIDI_POSIX_eager_iqueue_cell_t * cell)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_ENQUEUE_CELL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_ENQUEUE_CELL);
 
     /* TODO: is there any better way than recursion? Can we avoid
      * this invertion if we switch to SPSC queue?*/
@@ -36,7 +34,6 @@ static void MPIDI_POSIX_eager_iqueue_enqueue_cell(MPIDI_POSIX_eager_iqueue_trans
     }
     transport->last_cell = cell;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_ENQUEUE_CELL);
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
@@ -45,8 +42,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
     MPIDI_POSIX_eager_iqueue_cell_t *cell = NULL;
     MPIDI_POSIX_eager_iqueue_terminal_t *terminal;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_RECEIVE_CELL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_RECEIVE_CELL);
 
     /* Update the first_cell pointer in the queue if we pull out the first cell */
     if (transport->first_cell) {
@@ -85,7 +80,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_RECEIVE_CELL);
     return cell;
 }
 
@@ -97,8 +91,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
     int ret = MPIDI_POSIX_NOK;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
 
     /* Get the transport with the global variables */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
@@ -122,7 +114,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
         ret = MPIDI_POSIX_OK;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
     return ret;
 }
 
@@ -138,8 +129,6 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
 {
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 
     cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
     MPIR_Assert(cell != NULL);
@@ -148,7 +137,6 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPL_atomic_compiler_barrier();
     cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)

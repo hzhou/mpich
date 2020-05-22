@@ -22,8 +22,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks,
     int partner, offset, count, send_offset, recv_offset;
     int i, send_count, recv_count;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_DATA_EXCHANGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_DATA_EXCHANGE);
 
     /* get the partner with whom I should exchange data */
     partner = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
@@ -57,7 +55,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks,
                              partner, tag, comm, sched, 0, NULL);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_DATA_EXCHANGE);
 
     return mpi_errno;
 }
@@ -74,8 +71,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_
     int mpi_errno = MPI_SUCCESS;
     int send_offset, recv_offset, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP1);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP1);
 
     if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
         void *buf_to_send;
@@ -95,7 +90,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP1);
 
     return mpi_errno;
 }
@@ -116,8 +110,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
     int *recv_id = *recv_id_;
     int nrecvs = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP2);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP2);
 
     if (is_dist_halving == 1) {
         phase = step2_nphases - 1;
@@ -175,7 +167,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
 
     *nrecvs_ = nrecvs;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP2);
 
     return mpi_errno;
 }
@@ -191,8 +182,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_
     int mpi_errno = MPI_SUCCESS;
     int total_count = 0, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP3);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP3);
 
     /* calculate the total count */
     for (i = 0; i < nranks; i++)
@@ -208,7 +197,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_
                              tag, comm, sched, nrecvs, recv_id);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH_STEP3);
 
     return mpi_errno;
 }
@@ -234,8 +222,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     int *recv_id = NULL;
     int tag;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
@@ -317,7 +303,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     MPL_free(step1_recvfrom);
     MPL_free(recv_id);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
   fn_fail:
@@ -334,8 +319,6 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_D
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RECEXCH);
 
     *req = NULL;
 
@@ -354,7 +337,6 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_D
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RECEXCH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

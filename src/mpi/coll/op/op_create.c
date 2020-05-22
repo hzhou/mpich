@@ -133,12 +133,10 @@ Output Parameters:
 int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_CREATE);
 
     /* ... body of routine ...  */
 
@@ -149,7 +147,6 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

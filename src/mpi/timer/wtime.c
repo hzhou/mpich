@@ -45,14 +45,11 @@ double MPI_Wtime(void)
 {
     double d;
     MPL_time_t t;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WTIME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTIME);
     MPL_wtime(&t);
     MPL_wtime_todouble(&t, &d);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTIME);
 
     return d;
 }

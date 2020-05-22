@@ -53,8 +53,6 @@ static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * 
     int i, *ranks_in_grp = NULL;
     MPIR_Group *win_grp_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_FILL_RANKS_IN_WIN_GRP);
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDIG_FILL_RANKS_IN_WIN_GRP);
 
     ranks_in_grp = (int *) MPL_malloc(group_ptr->size * sizeof(int), MPL_MEM_RMA);
     MPIR_Assert(ranks_in_grp);
@@ -74,7 +72,6 @@ static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * 
   fn_exit:
     MPL_free(ranks_in_grp);
 
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_FILL_RANKS_IN_WIN_GRP);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -84,8 +81,6 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_START);
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
@@ -104,7 +99,6 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
     MPIDIG_WIN(win, sync).access_epoch_type = MPIDIG_EPOTYPE_START;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_START);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -119,8 +113,6 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     int *ranks_in_win_grp = NULL;
     int all_local_completed = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
 
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_START, mpi_errno, return mpi_errno);
 
@@ -181,7 +173,6 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
   fn_exit:
     MPL_free(ranks_in_win_grp);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -194,8 +185,6 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     int win_grp_idx, peer;
     int *ranks_in_win_grp = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_POST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_POST);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
@@ -241,7 +230,6 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
   fn_exit:
     MPL_free(ranks_in_win_grp);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_POST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -252,8 +240,6 @@ static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
     group = MPIDIG_WIN(win, sync).pw.group;
@@ -265,7 +251,6 @@ static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
     MPIDIG_WIN(win, sync).exposure_epoch_type = MPIDIG_EPOTYPE_NONE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -275,8 +260,6 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_TEST);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
 
@@ -297,7 +280,6 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_TEST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -308,8 +290,6 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     int mpi_errno = MPI_SUCCESS;
     unsigned locked;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
 
     MPIDIG_LOCK_EPOCH_CHECK_NONE(win, rank, mpi_errno, goto fn_fail);
 
@@ -349,7 +329,6 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     MPIDIG_WIN(win, sync).lock.count++;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -361,8 +340,6 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     unsigned unlocked;
     MPIDIG_win_cntrl_msg_t msg;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
 
     /* Check window lock epoch. */
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
@@ -427,7 +404,6 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -438,8 +414,6 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
 
     MPIDIG_FENCE_EPOCH_CHECK(win, mpi_errno, goto fn_fail);
 
@@ -477,7 +451,6 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -490,8 +463,6 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
     int offset = rank;
     MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
 
     /* When only single process exists on the node or shared memory allocation fails,
      * should only query MPI_PROC_NULL or local process. Thus, return local window's info. */
@@ -525,15 +496,12 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
     return mpi_errno;
 }
 
 static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
 
     /* Check window lock epoch. */
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, return mpi_errno);
@@ -561,7 +529,6 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
                                             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -571,8 +538,6 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int all_local_completed = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
@@ -595,7 +560,6 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     } while (all_local_completed != 1);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -604,8 +568,6 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     int i;
 
     int all_remote_completed = 0;
@@ -665,7 +627,6 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     MPIDIG_WIN(win, sync).assert_mode = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -674,8 +635,6 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
 
     /* Check window lock epoch. */
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, return mpi_errno);
@@ -702,7 +661,6 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
     MPIDIU_PROGRESS_DO_WHILE(target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -711,14 +669,11 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
 static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
     MPL_atomic_read_write_barrier();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -728,8 +683,6 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int all_remote_completed = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
@@ -752,7 +705,6 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
     } while (all_remote_completed != 1);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -762,8 +714,6 @@ static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
@@ -804,7 +754,6 @@ static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
     MPIDIG_WIN(win, sync).access_epoch_type = MPIDIG_EPOTYPE_LOCK_ALL;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

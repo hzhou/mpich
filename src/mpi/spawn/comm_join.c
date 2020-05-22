@@ -130,12 +130,10 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm)
     MPIR_Comm *intercomm_ptr;
     char *local_port, *remote_port;
     MPIR_CHKLMEM_DECL(2);
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_JOIN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_JOIN);
 
     /* ... body of routine ...  */
 
@@ -181,7 +179,6 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_JOIN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

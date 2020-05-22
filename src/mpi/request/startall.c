@@ -61,12 +61,10 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
     int i;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STARTALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_STARTALL);
 
     /* Validate handle parameters needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -126,7 +124,6 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
         MPIR_CHKLMEM_FREEALL();
     }
 
-    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_STARTALL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

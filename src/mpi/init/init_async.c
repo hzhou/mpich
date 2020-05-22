@@ -85,9 +85,7 @@ int MPIR_Init_async_thread(void)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_self_ptr;
     int err = 0;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
 
     /* Dup comm world for the progress thread */
@@ -99,7 +97,6 @@ int MPIR_Init_async_thread(void)
     MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s",
                          strerror(err));
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
   fn_exit:
     return mpi_errno;
@@ -114,9 +111,7 @@ int MPIR_Finalize_async_thread(void)
     MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -134,7 +129,6 @@ int MPIR_Finalize_async_thread(void)
     mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
     MPIR_Assert(!mpi_errno);
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
     return mpi_errno;
 }

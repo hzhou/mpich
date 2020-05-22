@@ -14,8 +14,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 
     if (ucp_request->req)
         rreq = ucp_request->req;
@@ -46,7 +44,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     }
 
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
@@ -55,8 +52,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPI_Status *mrecv_status;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 
     /* complete the request if we have it, or allocate a status object */
     int has_request = (ucp_request->req != NULL);
@@ -85,7 +80,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
@@ -105,8 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV);
 
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
@@ -149,7 +141,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     *request = req;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

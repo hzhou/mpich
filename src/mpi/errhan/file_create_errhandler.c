@@ -48,12 +48,10 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -80,7 +78,6 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

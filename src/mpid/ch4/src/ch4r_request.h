@@ -14,8 +14,6 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIR_Request *req;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
 
     req = MPIR_Request_create_from_pool(kind, 0);
     if (req == NULL)
@@ -44,7 +42,6 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIDIG_REQUEST(req, req->status) = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_CREATE);
     return req;
   fn_fail:
     goto fn_exit;
@@ -53,8 +50,6 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                                            MPIR_Request_kind_t kind)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_INIT);
 
     MPIR_Assert(req != NULL);
     /* Increment the refcount by one to account for the MPIDIG layer */
@@ -70,7 +65,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
     return req;
 }
 

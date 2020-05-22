@@ -23,20 +23,15 @@ int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg
 void MPIDIG_am_reg_cb(int handler_id,
                       MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_REG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_REG_CB);
 
     MPIDIG_global.target_msg_cbs[handler_id] = target_msg_cb;
     MPIDIG_global.origin_cbs[handler_id] = origin_cb;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_REG_CB);
 }
 
 int MPIDIG_am_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_INIT);
 
     MPIDI_global.comm_req_lists = (MPIDIG_comm_req_list_t *)
         MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
@@ -106,7 +101,6 @@ int MPIDIG_am_init(void)
     mpi_errno = MPIDIG_RMA_Init_targetcb_pvars();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_INIT);
 
   fn_exit:
     return mpi_errno;
@@ -116,12 +110,9 @@ int MPIDIG_am_init(void)
 
 void MPIDIG_am_finalize(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_FINALIZE);
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
     MPIDIU_destroy_buf_pool(MPIDI_global.buf_pool);
     MPL_free(MPIDI_global.comm_req_lists);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_FINALIZE);
 }
