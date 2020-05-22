@@ -28,8 +28,6 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
 
     int j, local_rank, grank;
     MPIDI_POSIX_fastbox_t *fbox_in;
@@ -95,7 +93,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
     return mpi_errno;
 }
 
@@ -109,8 +106,6 @@ MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 
     MPIDI_POSIX_fastbox_t *fbox_in = NULL;
 
@@ -118,13 +113,10 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
 
     MPL_atomic_store_int(&fbox_in->data_ready, 0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_POSTED_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_POSTED_HOOK);
 
     int local_rank, i;
 
@@ -147,15 +139,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_POSTED_HOOK);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
 {
     int i, local_rank;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK);
 
     if (grank >= 0) {
         local_rank = MPIDI_POSIX_global.local_ranks[grank];
@@ -172,7 +161,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK);
 }
 
 #endif /* POSIX_EAGER_FBOX_RECV_H_INCLUDED */

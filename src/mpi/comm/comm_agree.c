@@ -33,8 +33,6 @@ int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int values[2];
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_AGREE);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_AGREE);
 
     MPIR_Comm_group_impl(comm_ptr, &comm_grp);
 
@@ -95,7 +93,6 @@ int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
     }
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_AGREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -125,12 +122,10 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_COMM_AGREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_COMM_AGREE);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #ifdef HAVE_ERROR_CHECKING
@@ -165,7 +160,6 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIX_COMM_AGREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

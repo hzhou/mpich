@@ -11,8 +11,6 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
     MPIDIG_rreq_t **uelist;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT_COMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_INIT_COMM);
 
     MPIR_Assert(MPIDI_global.is_ch4u_initialized);
 
@@ -50,15 +48,12 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
 
     MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_INIT_COMM);
     return mpi_errno;
 }
 
 int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DESTROY_COMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DESTROY_COMM);
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
@@ -84,7 +79,6 @@ int MPIDIG_destroy_comm(MPIR_Comm * comm)
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DESTROY_COMM);
     return mpi_errno;
 }
 
@@ -102,8 +96,6 @@ static mem_node_t *mem_list_tail = NULL;
 
 void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
     void *p;
     MPIR_hwtopo_type_e mem_type = MPIR_HWTOPO_TYPE__DDR;
     MPIR_hwtopo_gid_t mem_gid = MPIR_HWTOPO_GID_ROOT;
@@ -154,15 +146,12 @@ void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
          * (first touch policy in Linux). */
         p = MPL_malloc(size, MPL_MEM_USER);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
     return p;
 }
 
 int MPIDIG_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_FREE_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_FREE_MEM);
     mem_node_t *el = NULL;
 
     /* scan memory list for allocations */
@@ -179,6 +168,5 @@ int MPIDIG_mpi_free_mem(void *ptr)
     } else {
         MPL_free(ptr);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_FREE_MEM);
     return mpi_errno;
 }

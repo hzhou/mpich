@@ -17,8 +17,6 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *shm_group_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_NODE_RANKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_NODE_RANKS);
 
     for (i = 0; i < shm_comm_ptr->local_size; i++)
         shm_ranks[i] = i;
@@ -42,7 +40,6 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_NODE_RANKS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -59,8 +56,6 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
     MPIDIG_win_shared_info_t *shared_table = NULL;
     int *ranks_in_shm_grp = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_MPI_WIN_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_MPI_WIN_CREATE_HOOK);
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
 
@@ -136,7 +131,6 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_WIN_CREATE_HOOK);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -149,8 +143,6 @@ int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
     int i;
     MPIDI_XPMEM_win_t *xpmem_win = &win->dev.shm.xpmem;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_MPI_WIN_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_MPI_WIN_FREE_HOOK);
 
     if (!shm_comm_ptr || win->create_flavor != MPI_WIN_FLAVOR_CREATE ||
         !MPIDIG_WIN(win, shared_table))
@@ -168,7 +160,6 @@ int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
     MPL_free(xpmem_win->regist_segs);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_WIN_FREE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

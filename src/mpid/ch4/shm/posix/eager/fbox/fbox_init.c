@@ -31,8 +31,6 @@ int MPIDI_POSIX_fbox_init(int rank, int size)
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
 
     MPIR_CHKPMEM_DECL(3);
 
@@ -86,7 +84,6 @@ int MPIDI_POSIX_fbox_init(int rank, int size)
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -99,8 +96,6 @@ int MPIDI_POSIX_fbox_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_FINALIZE);
 
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
@@ -109,7 +104,6 @@ int MPIDI_POSIX_fbox_finalize(void)
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

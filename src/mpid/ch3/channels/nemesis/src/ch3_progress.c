@@ -99,9 +99,7 @@ static void sigusr1_handler(int sig)
 static int check_terminating_vcs(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHECK_TERMINATING_VCS);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHECK_TERMINATING_VCS);
 
     while (!TERMQ_EMPTY() && MPIR_Request_is_complete(TERMQ_HEAD()->req)) {
         vc_term_element_t *ep;
@@ -113,7 +111,6 @@ static int check_terminating_vcs(void)
     }
     
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_TERMINATING_VCS);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -131,9 +128,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     MPIR_Request *sreq;
     int again = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
 
     sreq = MPIDI_CH3I_shm_active_send;
     MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, {if (sreq) MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Send: cont sreq");});
@@ -268,7 +263,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
     }
         
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -281,9 +275,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     int made_progress = FALSE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -516,7 +508,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -528,9 +519,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS, err;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DELAY);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DELAY);
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
@@ -538,7 +527,6 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     }
 #   endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DELAY);
     return mpi_errno;
 }
 /* end MPIDI_CH3I_Progress_delay() */
@@ -547,9 +535,7 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 {
     int mpi_errno = MPI_SUCCESS,err;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
@@ -558,7 +544,6 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
     }
 #   endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
     return mpi_errno;
 }
 /* end MPIDI_CH3I_Progress_continue() */
@@ -566,12 +551,9 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 
 void MPIDI_CH3I_Progress_wakeup(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_WAKEUP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_WAKEUP);
 
     /* no processes sleep in nemesis progress */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_WAKEUP);
     return;
 }
 #endif /* MPICH_IS_THREADED */
@@ -582,9 +564,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
     MPIR_Request *rreq = NULL;
     int complete;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_HANDLE_PKT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_HANDLE_PKT);
 
     do
     {
@@ -782,7 +762,6 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
     while (buflen);
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_HANDLE_PKT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -804,9 +783,7 @@ int MPIDI_CH3I_Progress_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
@@ -853,7 +830,6 @@ int MPIDI_CH3I_Progress_init(void)
 #endif
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -863,9 +839,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     qn_ent_t *ent;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
     while(qn_head) {
         ent = qn_head->next;
@@ -874,7 +848,6 @@ int MPIDI_CH3I_Progress_finalize(void)
     }
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -884,9 +857,7 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 {
     /* This function is called after all sends have completed */
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_CONNECTION_TERMINATED);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SHM_CONNECTION_TERMINATED);
 
     if (vc->ch.lmt_vc_terminated) {
         mpi_errno = vc->ch.lmt_vc_terminated(vc);
@@ -903,7 +874,6 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminated VC %d", vc->pg_rank);
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_SHM_CONNECTION_TERMINATED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -914,9 +884,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminating VC %d", vc->pg_rank);
 
@@ -975,7 +943,6 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
     
  fn_exit:
     MPIR_CHKPMEM_COMMIT();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
     return mpi_errno;
  fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -987,9 +954,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *prev;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
 
     req = MPIDI_CH3I_shm_sendq.head;
     prev = NULL;
@@ -1017,7 +982,6 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
     }
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -1030,16 +994,13 @@ static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_netmod_t * const netmod_pkt = (MPID_nem_pkt_netmod_t *)pkt;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PKT_NETMOD_HANDLER);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PKT_NETMOD_HANDLER);
 
     MPIR_Assert_fmt_msg(vc_ch->pkt_handler && netmod_pkt->subtype < vc_ch->num_pkt_handlers, ("no handler defined for netmod-local packet"));
 
     mpi_errno = vc_ch->pkt_handler[netmod_pkt->subtype](vc, pkt, data, buflen, rreqp);
 
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PKT_NETMOD_HANDLER);
     return mpi_errno;
 }
 
@@ -1108,9 +1069,7 @@ static int anysource_matched(MPIR_Request *rreq)
 
 void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 
     /* MT FIXME acquiring MPIDCOMM here violates lock ordering rules,
      * easily causes deadlock */
@@ -1164,7 +1123,6 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
     }
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
     return;
 }
 
@@ -1174,9 +1132,7 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
     int local_rank = -1;
     MPIDI_VC_t *vc;
     int matched = FALSE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
 
     if (rreq->dev.match.parts.rank == MPI_ANY_SOURCE)
     {
@@ -1207,7 +1163,6 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
 #endif
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
     return matched;
 }
 

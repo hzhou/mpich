@@ -103,7 +103,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;
     MPIR_Group *group_ptr2 = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_COMPARE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
@@ -111,7 +110,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
      * within a mutex.  As most of the group routines are not performance
      * critical, we simple run these routines within the SINGLE_CS */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_COMPARE);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -154,7 +152,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_COMPARE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

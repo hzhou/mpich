@@ -73,9 +73,7 @@ int MPID_Init(int requested, int *provided)
     MPIR_Comm * comm;
     int p;
     int val;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
     if (MPICH_THREAD_LEVEL >= requested)
         *provided = requested;
@@ -244,7 +242,6 @@ int MPID_Init(int requested, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -257,8 +254,6 @@ static int init_spawn(void)
 {
     int mpi_errno = MPI_SUCCESS;
     char * parent_port;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 
     /* FIXME: To allow just the "root" process to
@@ -295,7 +290,6 @@ static int init_spawn(void)
     /* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
        if not already freed.  */
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
   fn_exit:
     return mpi_errno;
   fn_fail:

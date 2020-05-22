@@ -62,12 +62,10 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_RECV_INIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_RECV_INIT);
 
     /* Validate handle parameters needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -133,7 +131,6 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_RECV_INIT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

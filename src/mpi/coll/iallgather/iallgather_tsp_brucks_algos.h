@@ -44,8 +44,6 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_BRUCKS);
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
                                              "Iallgather_brucks: num_ranks: %d, k: %d", size, k));
 
@@ -165,7 +163,6 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_BRUCKS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -180,8 +177,6 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Dat
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
 
     *req = NULL;
 
@@ -199,7 +194,6 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Dat
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

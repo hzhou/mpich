@@ -31,8 +31,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     int offset, recv_size, num_dependencies;
     MPIR_CHKLMEM_DECL(3);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
 
 
     size = MPIR_Comm_size(comm);
@@ -182,7 +180,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -198,8 +195,6 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
 
     *req = NULL;
 
@@ -219,7 +214,6 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

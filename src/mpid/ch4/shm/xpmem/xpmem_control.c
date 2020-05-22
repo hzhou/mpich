@@ -14,14 +14,11 @@ int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_recv_fin.req_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -32,8 +29,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_send_fin.req_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
 
     /* send_fin_cb can only be triggered in cooperative copy, so
      * MPIDI_XPMEM_REQUEST(rreq, counter_ptr) must be set by receiver */
@@ -42,7 +37,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPID_Request_complete(rreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -54,8 +48,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->xpmem_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
 
     /* Try to match a posted receive request.
      * root_comm cannot be NULL if a posted receive request exists, because
@@ -127,7 +119,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -147,8 +138,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIDI_XPMEM_cnt_t *counter_ptr = NULL;
     int fin_type, copy_type;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CTS_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CTS_CB);
 
     /* Sender gets the CTS packet from receiver and need to perform copy */
     sreq = (MPIR_Request *) slmt_cts_hdr->sreq_ptr;
@@ -234,7 +223,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CTS_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -246,8 +234,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIDI_XPMEM_cnt_t *counter_ptr;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t *xpmem_slmt_cnt_free = &ctrl_hdr->xpmem_slmt_cnt_free;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CNT_FREE_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CNT_FREE_CB);
 
     if (xpmem_slmt_cnt_free->coop_counter_direct_flag)
         counter_ptr = (MPIDI_XPMEM_cnt_t *) ((char *) MPIDI_XPMEM_cnt_mem_direct +
@@ -258,7 +244,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIR_cc_decr(&MPIDI_XPMEM_global.num_pending_cnt, &c);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CNT_FREE_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

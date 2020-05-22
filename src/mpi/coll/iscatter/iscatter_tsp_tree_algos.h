@@ -16,8 +16,6 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                        int k, MPIR_TSP_sched_t * sched)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTER_SCHED_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTER_SCHED_INTRA_TREE);
 
     int mpi_errno = MPI_SUCCESS;
     int size, rank;
@@ -174,7 +172,6 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTER_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -190,8 +187,6 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
 
     *req = NULL;
 
@@ -211,7 +206,6 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

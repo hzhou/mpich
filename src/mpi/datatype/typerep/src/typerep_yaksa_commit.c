@@ -8,8 +8,6 @@
 
 void MPIR_Typerep_commit(MPI_Datatype type, void **typerep)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_COMMIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_COMMIT);
 
     switch (type) {
         case MPI_FLOAT_INT:
@@ -36,13 +34,10 @@ void MPIR_Typerep_commit(MPI_Datatype type, void **typerep)
             break;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_COMMIT);
 }
 
 void MPIR_Typerep_free(void **typerep)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_FREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_FREE);
 
     yaksa_type_t type = (yaksa_type_t) (*typerep);
 
@@ -52,5 +47,4 @@ void MPIR_Typerep_free(void **typerep)
         yaksa_type_free(type);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_FREE);
 }

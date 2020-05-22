@@ -216,12 +216,10 @@ int MPI_Type_vector(int count,
                     int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_VECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_VECTOR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -255,7 +253,6 @@ int MPI_Type_vector(int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_VECTOR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

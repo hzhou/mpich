@@ -92,8 +92,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     void *in_data;
     size_t data_sz;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
 
     /* note: msg_hdr + 1 points to the payload */
     p_data = in_data = (char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz;
@@ -104,7 +102,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
                                                        p_data, data_sz, 0, 0, NULL);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
     return mpi_errno;
 }
 
@@ -112,14 +109,11 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                        NULL, 0, 0, 0, NULL);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
     return mpi_errno;
 }
 
@@ -133,8 +127,6 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     size_t done = 0, curr_len, rem = 0;
     MPIDI_OFI_am_request_t *am_req;
     MPIR_Comm *comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
 
     rem = data_sz;
 
@@ -178,7 +170,6 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -193,8 +184,6 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     MPIR_Request *rreq = NULL;
     size_t in_data_sz;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
 
     in_data_sz = msg_hdr->data_sz;
     /* note: setting is_local, is_async to 0, 1 */
@@ -225,7 +214,6 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     /* completion in lmt event functions */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
     return mpi_errno;
 
   fn_fail:
@@ -236,8 +224,6 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_lmt_msg_payload_t *lmt_msg;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
 
     /* note: msg_hdr + 1 points to the payload */
     lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) ((char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz);
@@ -246,7 +232,6 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
     return mpi_errno;
 
   fn_fail:
@@ -259,8 +244,6 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_Request *sreq;
     MPIDI_OFI_ack_msg_payload_t *ack_msg;
     int handler_id;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
 
     ack_msg = (MPIDI_OFI_ack_msg_payload_t *) (msg_hdr + 1);
     sreq = ack_msg->sreq_ptr;
@@ -281,7 +264,6 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -294,8 +276,6 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
     MPIDI_OFI_ack_msg_t msg;
     MPIR_Comm *comm;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
 
     comm = MPIDIG_context_id_to_comm(context_id);
 
@@ -309,7 +289,6 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, &msg, sizeof(msg),
                                       MPIDI_OFI_comm_to_phys(comm, rank)), inject);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
