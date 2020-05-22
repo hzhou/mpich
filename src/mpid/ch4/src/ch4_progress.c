@@ -19,8 +19,6 @@ static int progress_test(MPID_Progress_state * state)
     int mpi_errno, made_progress;
     mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
 
 #ifdef HAVE_SIGNAL
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
@@ -55,7 +53,6 @@ static int progress_test(MPID_Progress_state * state)
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -71,23 +68,17 @@ int MPIDI_Progress_test(int flags)
 
 void MPID_Progress_start(MPID_Progress_state * state)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
 
     state->flag = MPIDI_PROGRESS_ALL;
     state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
     state->progress_start = state->progress_count;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
     return;
 }
 
 void MPID_Progress_end(MPID_Progress_state * state)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
     return;
 }
 
@@ -102,12 +93,9 @@ int MPID_Progress_poke(void)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_POKE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_POKE);
 
     ret = MPID_Progress_test();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_POKE);
     return ret;
 }
 
@@ -121,8 +109,6 @@ int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = MPID_Progress_test(state);
@@ -142,7 +128,6 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     }
 
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
   fn_exit:
     return mpi_errno;

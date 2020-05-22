@@ -14,8 +14,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
     int i;
     MPIDI_POSIX_eager_iqueue_cell_t *cell = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
 
     for (i = 0; i < transport->num_cells; i++) {
         cell = MPIDI_POSIX_EAGER_IQUEUE_THIS_CELL(transport, i);
@@ -26,7 +24,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
     cell = NULL;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
     return cell;
 }
 
@@ -51,8 +48,6 @@ MPIDI_POSIX_eager_send(int grank,
     char *payload;
     int ret = MPIDI_POSIX_OK;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
 
     /* Get the transport object that holds all of the global variables. */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
@@ -148,7 +143,6 @@ MPIDI_POSIX_eager_send(int grank,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
     return ret;
 }
 

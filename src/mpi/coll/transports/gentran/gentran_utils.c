@@ -30,8 +30,6 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 {
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_VTX_ISSUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_VTX_ISSUE);
 
     /* Check if the vertex has not already been issued and its
      * incoming dependencies have completed */
@@ -188,7 +186,6 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 #endif
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_VTX_ISSUE);
 }
 
 
@@ -397,8 +394,6 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     int i;
     vtx_t *vtxp, *vtxp_tmp;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
 
     if (sched->total_vtcs == 0) /* NULL schedule, nothing to issue */
         goto done;
@@ -554,7 +549,6 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

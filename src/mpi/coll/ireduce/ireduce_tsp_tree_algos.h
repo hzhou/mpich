@@ -42,8 +42,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     int tag;
     MPIR_CHKLMEM_DECL(3);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Scheduling pipelined reduce on %d ranks, root=%d",
@@ -239,7 +237,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -255,8 +252,6 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
 
     *req = NULL;
 
@@ -276,7 +271,6 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

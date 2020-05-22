@@ -208,8 +208,6 @@
 int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                                void *outbuf, MPI_Aint * actual_pack_bytes)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_PACK_EXTERNAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_PACK_EXTERNAL);
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -376,7 +374,6 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
   fn_exit:
     if (iov)
         MPL_free(iov);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_PACK_EXTERNAL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -385,8 +382,6 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
 int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outcount,
                                  MPI_Datatype datatype, MPI_Aint * actual_unpack_bytes)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_UNPACK_EXTERNAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_UNPACK_EXTERNAL);
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -554,7 +549,6 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
   fn_exit:
     if (iov)
         MPL_free(iov);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_UNPACK_EXTERNAL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -562,8 +556,6 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
 
 int MPIR_Typerep_size_external32(MPI_Datatype type)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_SIZE_EXTERNAL32);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_SIZE_EXTERNAL32);
 
     int size;
 
@@ -686,6 +678,5 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
                 assert(0);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_SIZE_EXTERNAL32);
     return size;
 }

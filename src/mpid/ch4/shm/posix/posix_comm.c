@@ -10,8 +10,6 @@
 int MPIDI_POSIX_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_PRE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_PRE_HOOK);
 
     /* Release_gather primitives based collective algorithm works for Intra-comms only */
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -20,7 +18,6 @@ int MPIDI_POSIX_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_PRE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -30,8 +27,6 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_POST_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_POST_HOOK);
 
     /* prune selection tree */
     mpi_errno = MPIR_Csel_prune(MPIDI_global.shm.posix.csel_root, comm,
@@ -39,7 +34,6 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_POST_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -48,8 +42,6 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
 
     if (MPIDI_POSIX_COMM(comm, csel_comm)) {
         mpi_errno = MPIR_Csel_free(MPIDI_POSIX_COMM(comm, csel_comm));
@@ -63,7 +55,6 @@ int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

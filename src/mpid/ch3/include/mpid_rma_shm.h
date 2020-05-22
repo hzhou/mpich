@@ -248,9 +248,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
     int mpi_errno = MPI_SUCCESS;
     void *base = NULL;
     int disp_unit;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -268,7 +266,6 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -292,9 +289,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     MPI_Aint total_len, rest_len;
     MPI_Aint origin_dtp_size;
     MPIR_Datatype*origin_dtp_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -378,7 +373,6 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -405,9 +399,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPIR_Datatype*origin_dtp_ptr = NULL;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
 
     /* Judge if origin buffer is empty */
     if (op == MPI_NO_OP)
@@ -496,7 +488,6 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -516,9 +507,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
     void *base = NULL;
     int disp_unit;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -536,7 +525,6 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -554,9 +542,7 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     MPI_Aint len;
     int shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -587,7 +573,6 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -609,9 +594,7 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     MPI_Aint len;
     int one, shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
     if ((*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype) != MPI_SUCCESS)
         goto fn_exit;
@@ -646,7 +629,6 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

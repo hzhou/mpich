@@ -48,12 +48,10 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = 0;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_RANK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_RANK);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -94,7 +92,6 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_RANK);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

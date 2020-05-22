@@ -31,14 +31,12 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
     MPIR_Win *win_ptr = NULL;
     MPII_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* The thread lock prevents a valid attr delete on the same window
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -137,7 +135,6 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -187,8 +184,6 @@ corresponding keyval was created) will be called.
 int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
@@ -199,7 +194,6 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_SET_ATTR);
     return mpi_errno;
 
   fn_fail:

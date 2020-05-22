@@ -26,8 +26,6 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
     MPI_Aint recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_ALLCOMM_LINEAR);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
@@ -56,7 +54,6 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_ALLCOMM_LINEAR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -74,8 +71,6 @@ int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendco
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_ALLCOMM_LINEAR);
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -93,7 +88,6 @@ int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendco
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_ALLCOMM_LINEAR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
