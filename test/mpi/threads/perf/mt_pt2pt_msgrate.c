@@ -59,8 +59,10 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *arg)
         fprintf(stderr, "Thread %d: Error in allocating send buffer\n", tid);
     }
 
+    printf("Send thread %d Warmup...\n", tid);
     /* Warmup */
     for (win_post_i = 0; win_post_i < win_posts; win_post_i++) {
+        printf("   send batch %d...\n", win_post_i);
         for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
             MPI_Isend(send_buf, MESSAGE_SIZE, MPI_CHAR, 1, tid, my_comm, &requests[win_i]);
         }
@@ -75,6 +77,7 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *arg)
     }
     MTest_thread_barrier(runtime_num_threads);
 
+    printf("Send thread %d Benchmark...\n", tid);
     /* Benchmark */
     t_start = MPI_Wtime();
 
@@ -93,6 +96,7 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *arg)
     t_elapsed[tid] = t_end - t_start;
 
     free(send_buf);
+    printf("Send thread %d done...\n", tid);
 }
 
 MTEST_THREAD_RETURN_TYPE recv_thread(void *arg)
@@ -124,7 +128,9 @@ MTEST_THREAD_RETURN_TYPE recv_thread(void *arg)
     }
 
     /* Warmup */
+    printf("Recv thread %d Warmup...\n", tid);
     for (win_post_i = 0; win_post_i < win_posts; win_post_i++) {
+        printf("   recv batch %d...\n", win_post_i);
         for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
             MPI_Irecv(recv_buf, MESSAGE_SIZE, MPI_CHAR, 0, tid, my_comm, &requests[win_i]);
         }
@@ -139,6 +145,7 @@ MTEST_THREAD_RETURN_TYPE recv_thread(void *arg)
     }
     MTest_thread_barrier(runtime_num_threads);
 
+    printf("Recv thread %d Benchmark...\n", tid);
     /* Benchmark */
     for (win_post_i = 0; win_post_i < win_posts; win_post_i++) {
         for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
@@ -151,6 +158,7 @@ MTEST_THREAD_RETURN_TYPE recv_thread(void *arg)
     MPI_Send(&sync_buf, 1, MPI_INT, 0, tid, my_comm);
 
     free(recv_buf);
+    printf("Recv thread %d done...\n", tid);
 }
 
 
@@ -163,11 +171,13 @@ int main(int argc, char *argv[])
     int errors;
     MPI_Info info;
 
+    printf("Running [%s]\n", argv[0]);
     if (argc > 2) {
         fprintf(stderr, "Can support at most only the -nthreads argument.\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
+    printf("MTest_Init_thread...\n");
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     if (provided != MPI_THREAD_MULTIPLE) {
@@ -181,6 +191,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "please run with exactly two processes.\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
+    printf("Hello %d / %d\n", rank, size);
 
     errors = MTest_thread_barrier_init();
     if (errors) {
@@ -203,6 +214,7 @@ int main(int argc, char *argv[])
     }
 
     /* Run test with 1 thread */
+    printf("Running test with 1 thread ... %d / %d messages\n", NUM_MESSAGES, WINDOW_SIZE);
     runtime_num_threads = 1;
     if (rank == 0) {
         send_thread((void *) 0);
@@ -211,15 +223,18 @@ int main(int argc, char *argv[])
     }
 
     onethread_msg_rate = ((double) NUM_MESSAGES / t_elapsed[0]) / 1e6;
+    printf("    message rate: %.2f Mmsg/sec\n", onethread_msg_rate);
 
     /* Run test with multiple threads */
     runtime_num_threads = num_threads;
     if (rank == 0) {
+        printf("Starting %d send threads...\n", num_threads);
         for (int i = 1; i < num_threads; i++) {
             MTest_Start_thread(send_thread, (void *) (long) i);
         }
         send_thread((void *) 0);
     } else {
+        printf("Starting %d recv threads...\n", num_threads);
         for (int i = 1; i < num_threads; i++) {
             MTest_Start_thread(recv_thread, (void *) (long) i);
         }
