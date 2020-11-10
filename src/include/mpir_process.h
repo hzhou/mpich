@@ -17,9 +17,20 @@ typedef struct PreDefined_attrs {
     int wtime_is_global;        /* Wtime is global over processes in COMM_WORLD */
 } PreDefined_attrs;
 
+typedef enum {
+    MPIR_WORLD_MODEL_UNINITIALIZED = 0,
+    MPIR_WORLD_MODEL_INITIALIZED,
+    MPIR_WORLD_MODEL_FINALIZED
+} MPIR_World_model_state;
+
+typedef struct MPIR_Session {
+    MPIR_OBJECT_HEADER;
+} MPIR_Session;
+
 typedef struct MPIR_Process_t {
     MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
                                          * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
+    MPIR_World_model_state world_model_state;
 
     /* Fields to be initialized by MPIR_pmi_init() */
     int has_parent;
