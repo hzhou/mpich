@@ -11,6 +11,12 @@ mpi_sources +=                 \
     src/mpi/init/ismain.c      \
     src/mpi/init/finalize.c    \
     src/mpi/init/finalized.c   \
+    src/mpi/init/session_init.c \
+    src/mpi/init/session_finalize.c \
+    src/mpi/init/session_get_num_psets.c \
+    src/mpi/init/session_get_nth_pset.c \
+    src/mpi/init/session_get_info.c \
+    src/mpi/init/session_get_pset_info.c \
     src/mpi/init/querythread.c
 
 mpi_core_sources += \
