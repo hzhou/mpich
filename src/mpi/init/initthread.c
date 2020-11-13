@@ -73,7 +73,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
+            if (MPL_atomic_load_int(&MPIR_world_model_state) != MPICH_WORLD_MODEL_UNINITIALIZED) {
                 mpi_errno =
                     MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init_thread",
                                          __LINE__, MPI_ERR_OTHER, "**inittwice", 0);

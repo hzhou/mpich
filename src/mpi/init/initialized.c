@@ -61,7 +61,7 @@ int MPI_Initialized(int *flag)
 
     /* ... body of routine ...  */
 
-    *flag = (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT);
+    *flag = (MPL_atomic_load_int(&MPIR_world_model_state) == MPICH_WORLD_MODEL_INITIALIZED);
 
     /* ... end of body of routine ... */
 
