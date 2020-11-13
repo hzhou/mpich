@@ -82,7 +82,8 @@ typedef struct MPIR_Process_t {
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;
 
-extern MPL_atomic_int_t MPIR_world_model_state;
+extern MPL_atomic_int_t MPIR_mpich_state;
+extern MPL_atomic_ini_t MPIR_world_model_state;
 
 /* use spin lock to control access to init/finalize */
 extern MPL_atomic_int_t MPIR_init_lock;
