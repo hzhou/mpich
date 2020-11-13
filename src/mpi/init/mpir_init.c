@@ -79,12 +79,18 @@ int MPIR_Init_impl(int *argc, char ***argv)
     }
 
     int provided;
-    mpi_errno = MPIR_Init_thread_impl(argc, argv, threadLevel, &provided);
+    mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided, NULL);
 
     return mpi_errno;
 }
 
 int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
+{
+    return MPIR_Init_thread(argc, argv, threadLevel, provided, NULL);
+}
+
+int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided,
+                     MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
@@ -206,7 +212,6 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_atomic_store_int(&MPIR_mpich_state, MPICH_MPI_STATE__INITIALIZED);
-    MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_INITIALIZED);
 
     /**********************************************************************/
     /* Section 7: we are finally ready to start the asynchronous
@@ -225,6 +230,9 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
         *provided = MPIR_ThreadInfo.thread_provided;
 
   fn_exit:
+    if (!session_ptr) {
+        MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_INITIALIZED);
+    }
     MPIR_INIT_UNLOCK;
     return mpi_errno;
   fn_fail:

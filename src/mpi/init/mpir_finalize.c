@@ -67,6 +67,11 @@ static void MPIR_Call_finalize_callbacks(int min_prio, int max_prio)
 
 int MPIR_Finalize_impl(void)
 {
+    return MPIR_Finalize(NULL);
+}
+
+int MPIR_Finalize(MPIR_Session * session_ptr)
+{
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;
 
@@ -127,9 +132,11 @@ int MPIR_Finalize_impl(void)
     MPII_thread_mutex_destroy();
     MPIR_Typerep_finalize();
     MPL_atomic_store_int(&MPIR_mpich_state, MPICH_MPI_STATE__UNINTIALIZED);
-    MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_FINALIZED);
 
   fn_exit:
+    if (!session_ptr) {
+        MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_FINALIZED);
+    }
     MPIR_INIT_UNLOCK;
     return mpi_errno;
   fn_fail:
