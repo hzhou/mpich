@@ -36,6 +36,35 @@ class MPI_API_Global:
         'REQUEST': "MPIR_Request",
         'MESSAGE': "MPIR_Request",
         'SESSION': "MPIR_Session",
-        'GREQ_CLASS': "MPIR_Grequest_class",
+        'GREQUEST_CLASS': "MPIR_Grequest_class",
     }
 
+    handle_out_do_ptrs = {
+        'COMMUNICATOR': 1,
+        'GROUP': 1,
+        'DATATYPE': 1,
+        'ERRHANDLER': 1,
+        'OPERATION': 1,
+        'INFO': 1,
+        'WINDOW': 1,
+        # 'KEYVAL': 1,
+        'REQUEST': 1,
+        'MESSAGE': 1,
+        'SESSION': 1,
+        'GREQUEST_CLASS': 1,
+    }
+
+    handle_NULLs = {
+        'COMMUNICATOR': "MPI_COMM_NULL",
+        'GROUP': "MPI_GROUP_NULL",
+        'DATATYPE': "MPI_DATATYPE_NULL",
+        'ERRHANDLER': "MPI_ERRHANDLER_NULL",
+        'OPERATION': "MPI_OP_NULL",
+        'INFO': "MPI_INFO_NULL",
+        # 'WINDOW': "",
+        # 'KEYVAL': "",
+        'REQUEST': "MPI_REQUEST_NULL",
+        'MESSAGE': "MPI_MESSAGE_NULL",
+        # 'SESSION': "",
+        # 'GREQUEST_CLASS': "",
+    }

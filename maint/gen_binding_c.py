@@ -11,6 +11,7 @@ import os
 import glob
 
 def main():
+    print("Loading maint/mpi_standard_api.txt ...")
     load_mpi_api("maint/mpi_standard_api.txt")
 
     os.chdir("src/binding/c")
@@ -20,10 +21,16 @@ def main():
             # The name in eg pt2pt_api.txt indicates the output folder.
             # Only the api functions with output folder will get generated.
             # This allows simple control of what functions to generate.
+            print("Loading src/binding/c/%s ..." % f)
             load_mpi_api(f, RE.m.group(1))
 
-    for func in G.FUNCS.values():
-        if 'dir' in func:
+    func_list = [f for f in G.FUNCS.values() if 'dir' in f]
+    func_list.sort(key = lambda f: f['dir'])
+    for func in func_list:
+        if RE.search(r'not_implemented', func['attrs']):
+            print("  skip %s (not_implemented)" % func['name'])
+            pass
+        else:
             dump_mpi_c(func)
 
     dump_Makefile_mk()
