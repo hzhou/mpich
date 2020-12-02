@@ -55,7 +55,7 @@ int MPI_Finalize(void)
     MPIR_FUNC_TERSE_FINALIZE_ENTER(MPID_STATE_MPI_FINALIZE);
 
     /* ... body of routine ... */
-    mpi_errno = MPIR_Finalize();
+    mpi_errno = MPIR_Finalize_impl();
     if (mpi_errno) {
         goto fn_fail;
     }

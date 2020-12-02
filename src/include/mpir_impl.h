@@ -63,6 +63,12 @@ void MPIR_File_get_errhandler_impl(MPI_File file, MPI_Errhandler * errhandler);
 void MPIR_File_set_errhandler_impl(MPI_File file, MPIR_Errhandler * errhandler_ptr);
 int MPIR_File_call_errhandler_impl(MPI_File file, int errorcode);
 
+/* -- init -- */
+int MPIR_Abort_impl(MPIR_Comm * comm_ptr, int errorcode);
+int MPIR_Finalize_impl(void);
+int MPIR_Init_impl(int *argc, char ***argv);
+int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided);
+
 /* -- pt2pt */
 int MPIR_Sendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        int dest, int sendtag,

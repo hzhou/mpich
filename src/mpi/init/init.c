@@ -86,7 +86,7 @@ int MPI_Init(int *argc, char ***argv)
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Init(argc, argv);
+    mpi_errno = MPIR_Init_impl(argc, argv);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
