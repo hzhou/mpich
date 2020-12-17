@@ -331,7 +331,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPI_Aint origin_data_sz, target_data_sz;
     struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
-    int am_hdr_max_sz;
+    MPI_Aint am_hdr_max_sz;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif

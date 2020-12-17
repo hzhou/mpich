@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
     else
         old_seq = (uint16_t) (uintptr_t) ret;
 
-    seq = old_seq + 1;
+    seq = (uint16_t) (old_seq + 1);
     MPIDIU_map_update(MPIDI_OFI_global.am_send_seq_tracker, id, (void *) (uintptr_t) seq,
                       MPL_MEM_OTHER);
 
@@ -64,7 +64,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                                    __SHORT_FILE__,                      \
                                    __LINE__,                            \
                                    __func__,                              \
-                                   fi_strerror(-_ret));                 \
+                                   fi_strerror((int) (-_ret)));          \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_CHECK(mpi_errno);                               \
@@ -275,9 +275,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
-    msg_hdr->handler_id = handler_id;
+    msg_hdr->handler_id = (unsigned char) handler_id;
     msg_hdr->am_hdr_sz = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
-    msg_hdr->payload_sz = data_sz;
+    msg_hdr->payload_sz = (unsigned int) data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
@@ -324,8 +324,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = &send_req->msg_hdr;
-    msg_hdr->handler_id = handler_id;
-    msg_hdr->payload_sz = seg_sz;
+    msg_hdr->handler_id = (unsigned char) handler_id;
+    msg_hdr->payload_sz = (unsigned int) seg_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
@@ -517,7 +517,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
 
-    msg_hdr.handler_id = handler_id;
+    msg_hdr.handler_id = (unsigned char) handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
     msg_hdr.payload_sz = 0;
     msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
