@@ -44,7 +44,7 @@ struct MPIR_Win {
     MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
     void *base;
     MPI_Aint size;
-    int disp_unit;              /* Displacement unit of *local* window */
+    MPI_Aint disp_unit;         /* Displacement unit of *local* window */
     MPIR_Attribute *attributes;
     MPIR_Comm *comm_ptr;        /* Pointer to comm of window (dup) */
 #ifdef USE_THREADED_WINDOW_CODE
