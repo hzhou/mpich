@@ -8,7 +8,7 @@
 
 
 int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
-                                   int *disp_unit, void *baseptr)
+                                   MPI_Aint *disp_unit, void *baseptr)
 {
     int comm_size;
     int mpi_errno = MPI_SUCCESS;

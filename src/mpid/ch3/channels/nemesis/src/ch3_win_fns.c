@@ -15,15 +15,15 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused)
 
 MPIDI_SHM_Wins_list_t shm_wins_list;
 
-static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+static int MPIDI_CH3I_Win_init(MPI_Aint size, MPI_Aint disp_unit, int create_flavor, int model,
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
-static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info,
                                        MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr);
 
 static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr);
 
-static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info,
                                       MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
@@ -93,7 +93,7 @@ int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_ord
     goto fn_exit;
 }
 
-static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+static int MPIDI_CH3I_Win_init(MPI_Aint size, MPI_Aint disp_unit, int create_flavor, int model,
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -309,7 +309,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
     /* --END ERROR HANDLING-- */
 }
 
-static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info,
                                       MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     MPIR_Comm *node_comm_ptr = NULL;
@@ -436,7 +436,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     /* --END ERROR HANDLING-- */
 }
 
-static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info,
                                        MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -247,7 +247,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 {
     int mpi_errno = MPI_SUCCESS;
     void *base = NULL;
-    int disp_unit;
+    MPI_Aint disp_unit;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
 
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
@@ -283,7 +283,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
                                         MPIR_Win * win_ptr)
 {
     void *base = NULL;
-    int disp_unit, shm_op = 0;
+    MPI_Aint disp_unit, shm_op = 0;
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPI_Datatype basic_type;
@@ -394,7 +394,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
                                             MPI_Datatype target_datatype, MPI_Op op,
                                             MPIR_Win * win_ptr)
 {
-    int disp_unit, shm_locked = 0;
+    MPI_Aint disp_unit;
+    int shm_locked = 0;
     void *base = NULL;
     int i;
     MPI_Datatype basic_type;
@@ -514,7 +515,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
                                         MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     void *base = NULL;
-    int disp_unit;
+    MPI_Aint disp_unit;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
 
@@ -550,7 +551,7 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
                                         MPI_Aint target_disp, MPIR_Win * win_ptr)
 {
     void *base = NULL, *dest_addr = NULL;
-    int disp_unit;
+    MPI_Aint disp_unit;
     MPI_Aint len;
     int shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -605,7 +606,7 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
 {
     void *base = NULL, *dest_addr = NULL;
     MPI_User_function *uop = NULL;
-    int disp_unit;
+    MPI_Aint disp_unit;
     MPI_Aint len;
     int one, shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;

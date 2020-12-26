@@ -1020,20 +1020,20 @@ void MPIDI_RMA_finalize(void);
  */
 
 typedef struct {
-    int (*create)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
-    int (*allocate)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shared)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shm)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*create)(void *, MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*allocate)(MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shared)(MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shm)(MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
     int (*create_dynamic)(MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*detect_shm)(MPIR_Win **);
-    int (*gather_info)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
-    int (*shared_query)(MPIR_Win *, int, MPI_Aint *, int *, void *);
+    int (*gather_info)(void *, MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*shared_query)(MPIR_Win *, int, MPI_Aint *, MPI_Aint *, void *);
 } MPIDI_CH3U_Win_fns_t;
 
 extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
 
 typedef struct {
-    int (*win_init)(MPI_Aint, int, int, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*win_init)(MPI_Aint, MPI_Aint, int, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*win_free)(MPIR_Win **);
 } MPIDI_CH3U_Win_hooks_t;
 
@@ -1061,19 +1061,19 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks);
 int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings);
 
 /* Default window creation functions provided by CH3 */
-int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
+int MPIDI_CH3U_Win_create(void *, MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *,
                          MPIR_Win **);
-int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info *info,
+int MPIDI_CH3U_Win_allocate(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info *info,
                            MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
-int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info *info,
+int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info *info,
                                    MPIR_Comm *comm_ptr, void *baseptr, MPIR_Win **win_ptr);
 int MPIDI_CH3U_Win_create_dynamic(MPIR_Info *info, MPIR_Comm *comm, MPIR_Win **win);
 int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
-                                int *disp_unit, void *baseptr);
+                                MPI_Aint *disp_unit, void *baseptr);
 
 /* MPI RMA Utility functions */
 
-int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
+int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *,
                                  MPIR_Win **);
 
 
