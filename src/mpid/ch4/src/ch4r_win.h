@@ -84,13 +84,13 @@ int MPIDIG_RMA_Init_sync_pvars(void);
 int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info);
 int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p);
 int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr);
-int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDIG_mpi_win_create(void *base, MPI_Aint length, MPI_Aint disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size);
-int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info_ptr,
                                    MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_detach(MPIR_Win * win, const void *base);
-int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
+int MPIDIG_mpi_win_allocate(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm, void *baseptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr);
 
@@ -565,7 +565,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
-                                                         int *disp_unit, void *baseptr)
+                                                         MPI_Aint * disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int offset = rank;

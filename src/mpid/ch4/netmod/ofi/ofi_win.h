@@ -205,7 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
                                                            int rank,
-                                                           MPI_Aint * size, int *disp_unit,
+                                                           MPI_Aint * size, MPI_Aint * disp_unit,
                                                            void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;

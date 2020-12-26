@@ -180,7 +180,7 @@ int MPIDI_UCX_mpi_win_free(MPIR_Win ** win_ptr)
     return MPIDIG_mpi_win_free(win_ptr);
 }
 
-int MPIDI_UCX_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDI_UCX_mpi_win_create(void *base, MPI_Aint length, MPI_Aint disp_unit, MPIR_Info * info,
                              MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
@@ -191,7 +191,7 @@ int MPIDI_UCX_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     return MPIDIG_mpi_win_attach(win, base, size);
 }
 
-int MPIDI_UCX_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDI_UCX_mpi_win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info_ptr,
                                       MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
@@ -202,7 +202,7 @@ int MPIDI_UCX_mpi_win_detach(MPIR_Win * win, const void *base)
     return MPIDIG_mpi_win_detach(win, base);
 }
 
-int MPIDI_UCX_mpi_win_allocate(MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDI_UCX_mpi_win_allocate(MPI_Aint length, MPI_Aint disp_unit, MPIR_Info * info,
                                MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_allocate(length, disp_unit, info, comm_ptr, baseptr, win_ptr);

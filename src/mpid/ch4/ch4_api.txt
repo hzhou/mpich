@@ -498,8 +498,8 @@ PARAM:
     data_sz: MPI_Aint
     datatype: MPI_Datatype
     datatype_p: MPIR_Datatype *
-    disp_unit: int
-    disp_unit_p: int *
+    disp_unit: MPI_Aint
+    disp_unit_p: MPI_Aint *
     displs: const MPI_Aint *
     errflag: MPIR_Errflag_t *
     flag: int *

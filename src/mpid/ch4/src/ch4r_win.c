@@ -15,11 +15,11 @@ enum {
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr);
 static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen);
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init);
-static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
+static int win_init(MPI_Aint length, MPI_Aint disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model);
 static int win_finalize(MPIR_Win ** win_ptr);
-static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
-                              MPIR_Win ** win_ptr, int shm_option);
+static int win_shm_alloc_impl(MPI_Aint size, MPI_Aint disp_unit, MPIR_Comm * comm_ptr,
+                              void **base_ptr, MPIR_Win ** win_ptr, int shm_option);
 
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
 {
@@ -221,7 +221,7 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
     goto fn_exit;
 }
 
-static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
+static int win_init(MPI_Aint length, MPI_Aint disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -412,8 +412,8 @@ static int win_finalize(MPIR_Win ** win_ptr)
  * memory, and initializes the shared_table structure that stores each
  * node process's size, disp_unit, and start address for shm RMA operations
  * and query routine.*/
-static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
-                              MPIR_Win ** win_ptr, int shm_option)
+static int win_shm_alloc_impl(MPI_Aint size, MPI_Aint disp_unit, MPIR_Comm * comm_ptr,
+                              void **base_ptr, MPIR_Win ** win_ptr, int shm_option)
 {
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -791,7 +791,7 @@ int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDIG_mpi_win_create(void *base, MPI_Aint length, MPI_Aint disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -854,7 +854,7 @@ int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info_ptr,
                                    MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -916,7 +916,7 @@ int MPIDIG_mpi_win_detach(MPIR_Win * win, const void *base)
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPIDIG_mpi_win_allocate(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                             void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

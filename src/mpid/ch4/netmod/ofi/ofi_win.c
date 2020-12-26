@@ -9,7 +9,7 @@
 
 static void load_acc_hint(MPIR_Win * win);
 static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo);
-static int win_allgather(MPIR_Win * win, void *base, int disp_unit);
+static int win_allgather(MPIR_Win * win, void *base, MPI_Aint disp_unit);
 static int win_set_per_win_sync(MPIR_Win * win);
 static int win_init_sep(MPIR_Win * win);
 static int win_init_stx(MPIR_Win * win);
@@ -117,7 +117,7 @@ static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
 #endif
 }
 
-static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
+static int win_allgather(MPIR_Win * win, void *base, MPI_Aint disp_unit)
 {
     int i, same_disp, mpi_errno = MPI_SUCCESS;
     uint32_t first;
@@ -617,7 +617,7 @@ int MPIDI_OFI_mpi_win_free(MPIR_Win ** win_ptr)
     return mpi_errno;
 }
 
-int MPIDI_OFI_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDI_OFI_mpi_win_create(void *base, MPI_Aint length, MPI_Aint disp_unit, MPIR_Info * info,
                              MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -642,7 +642,7 @@ int MPIDI_OFI_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     return mpi_errno;
 }
 
-int MPIDI_OFI_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDI_OFI_mpi_win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info_ptr,
                                       MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -669,8 +669,8 @@ int MPIDI_OFI_mpi_win_detach(MPIR_Win * win, const void *base)
     return mpi_errno;
 }
 
-int MPIDI_OFI_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
-                               void *baseptr, MPIR_Win ** win_ptr)
+int MPIDI_OFI_mpi_win_allocate(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info,
+                               MPIR_Comm * comm, void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE);

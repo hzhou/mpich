@@ -218,12 +218,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
-                                                   int rank, MPI_Aint * size, int *disp_unit,
+                                                   int rank, MPI_Aint * size, MPI_Aint * disp_unit,
                                                    void *baseptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_SHARED_QUERY);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
     MPIR_ERR_CHECK(mpi_errno);
