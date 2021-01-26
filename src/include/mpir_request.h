@@ -61,6 +61,7 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__RECV,
     MPIR_REQUEST_KIND__PREQUEST_SEND,
     MPIR_REQUEST_KIND__PREQUEST_RECV,
+    MPIR_REQUEST_KIND__PREQUEST_COLL,
     MPIR_REQUEST_KIND__GREQUEST,
     MPIR_REQUEST_KIND__COLL,
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
@@ -204,7 +205,9 @@ struct MPIR_Request {
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
-        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+            struct MPII_Genutil_sched_t *sched;
+        } persist;              /* for persistent request kinds, for example,
+                                 * MPIR_REQUEST_KIND__PREQUEST_SEND, MPIR_REQUEST_KIND__PREQUEST_COLL */
     } u;
 
     /* Other, device-specific information */
@@ -212,6 +215,8 @@ struct MPIR_Request {
      MPID_DEV_REQUEST_DECL
 #endif
 };
+void MPIR_Persist_coll_start(MPIR_Request * request);
+void MPIR_Persist_coll_free_cb(MPIR_Request * request);
 
 /* Multiple Request Pools
  * Request objects creation and freeing is in a hot path. Multiple pools allow different
@@ -288,7 +293,8 @@ static inline void MPIR_Request_register_pool_lock(int pool, MPID_Thread_mutex_t
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
     return (req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
-            req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
+            req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
+            req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_COLL);
 }
 
 /* Return whether a request is active.
