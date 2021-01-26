@@ -94,6 +94,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
                 mpi_errno = MPIDI_prequest_start(preq);
                 break;
+            case MPIR_REQUEST_KIND__PREQUEST_COLL:
+                MPIR_Persist_coll_start(preq);
                 break;
 
             default:
