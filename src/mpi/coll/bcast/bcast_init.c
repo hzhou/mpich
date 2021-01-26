@@ -23,8 +23,8 @@ static int MPIR_Bcast_sched_intra_auto(void *buffer, int count, MPI_Datatype dat
     return mpi_errno;
 }
 
-int MPIR_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root,
-                    MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
+int MPIR_Bcast_init_impl(void *buffer, int count, MPI_Datatype datatype, int root,
+                         MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -76,4 +76,21 @@ int MPIR_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root,
+                    MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE)) {
+        mpi_errno = MPID_Bcast_init(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+    } else {
+        mpi_errno =
+            MPIR_Bcast_init_impl(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+    }
+
+    return mpi_errno;
 }
