@@ -793,11 +793,14 @@ def push_impl_decl(func, impl_name=None):
         impl_name = re.sub(r'^MPIX?_', 'MPIR_', func['name']) + "_impl"
     if func['impl_param_list']:
         params = ', '.join(func['impl_param_list'])
-        if func['dir'] == 'coll' and not RE.match(r'MPI_I', func['name']):
+        if func['dir'] == 'coll' and not RE.match(r'MPI_(I.*|.*_init)$', func['name']):
             params = params + ", MPIR_Errflag_t *errflag"
     else:
         params="void"
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
+    if func['dir'] == 'coll':
+        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
+        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
 
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
     val_list = t.split()
@@ -819,7 +822,7 @@ def dump_body_coll(func):
     name = RE.m.group(1)
 
     args = ", ".join(func['impl_arg_list'])
-    if name.startswith('I'):
+    if re.match(r'MPI_(I.*|.*_init)$', func['name']):
         # non-blocking collectives
         G.out.append("MPIR_Request *request_ptr = NULL;")
         dump_line_with_break("mpi_errno = MPIR_%s(%s);" % (name, args))
