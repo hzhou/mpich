@@ -5317,7 +5317,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
-          doc/design/Makefile \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
