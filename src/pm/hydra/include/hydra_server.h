@@ -27,6 +27,9 @@ struct HYD_server_info_s {
     char *nameserver;
     char *localhost;
 
+    int singleton_port;
+    int singleton_pid;
+
      HYD_status(*stdout_cb) (int pgid, int proxy_id, int rank, void *buf, int buflen);
      HYD_status(*stderr_cb) (int pgid, int proxy_id, int rank, void *buf, int buflen);
 
