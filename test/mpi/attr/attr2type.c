@@ -25,7 +25,6 @@ static int copy_called = 0;
 
 int main(int argc, char *argv[])
 {
-    int mpi_errno;
     MPI_Datatype type, duptype;
     int rank;
     int errs = 0;
@@ -36,17 +35,17 @@ int main(int argc, char *argv[])
 
     foo_initialize();
 
-    mpi_errno = MPI_Type_contiguous(2, MPI_INT, &type);
+    MPI_Type_contiguous(2, MPI_INT, &type);
 
-    mpi_errno = MPI_Type_set_attr(type, foo_keyval, NULL);
+    MPI_Type_set_attr(type, foo_keyval, NULL);
 
-    mpi_errno = MPI_Type_dup(type, &duptype);
+    MPI_Type_dup(type, &duptype);
 
     my_func = "Free of type";
-    mpi_errno = MPI_Type_free(&type);
+    MPI_Type_free(&type);
 
     my_func = "free of duptype";
-    mpi_errno = MPI_Type_free(&duptype);
+    MPI_Type_free(&duptype);
 
     foo_finalize();
 

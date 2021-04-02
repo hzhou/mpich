@@ -4,6 +4,8 @@
  */
 
 #include "mpitest.h"
+#include "mtest_common.h"
+#include <string.h>
 
 /* ------------------------------------------------------------------------ */
 /* Utilities related to test environment */
