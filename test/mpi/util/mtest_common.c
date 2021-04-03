@@ -4,7 +4,6 @@
  */
 
 #include "mpitest.h"
-#include "mtest_common.h"
 #include <string.h>
 
 /* ------------------------------------------------------------------------ */

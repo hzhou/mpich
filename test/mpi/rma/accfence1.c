@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
                  * as MPI_Put; the only difference is in the
                  * handling of overlapping accumulate operations,
                  * which are not tested here */
-                err = MPI_Accumulate(origbuf + orig_obj.DTP_buf_offset, origcount,
+                err = MPI_Accumulate((char *) origbuf + orig_obj.DTP_buf_offset, origcount,
                                      origtype, target, target_obj.DTP_buf_offset / extent,
                                      targetcount, targettype, MPI_REPLACE, win);
                 if (err) {

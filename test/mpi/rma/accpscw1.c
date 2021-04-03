@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
                     }
                 }
                 MPI_Group_free(&neighbors);
-                err = MPI_Accumulate(origbuf + orig_obj.DTP_buf_offset, origcount,
+                err = MPI_Accumulate((char *) origbuf + orig_obj.DTP_buf_offset, origcount,
                                      origtype, target, target_obj.DTP_buf_offset / extent,
                                      targetcount, targettype, MPI_REPLACE, win);
                 if (err) {

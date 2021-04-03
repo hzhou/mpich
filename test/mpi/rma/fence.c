@@ -111,13 +111,11 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
         /* This should have the same effect, in terms of
          * transferring data, as a send/recv pair */
 #if defined(USE_GET)
-        err =
-            MPI_Get(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
-                    target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+        err = MPI_Get((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
+                      target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
 #elif defined(USE_PUT)
-        err =
-            MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
-                    target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+        err = MPI_Put((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
+                      target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
 #endif
         if (err) {
             errs++;

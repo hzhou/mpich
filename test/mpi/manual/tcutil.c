@@ -23,6 +23,9 @@
 
 #include "connectstuff.h"
 
+/* define FNAME_SIZE slightly less to avoid warnings in snprintf */
+#define FNAME_SIZE PATH_MAX - 10
+
 static void printTimeStamp(void)
 {
     time_t t;
@@ -49,9 +52,8 @@ void safeSleep(double seconds)
 void printStackTrace()
 {
     static char cmd[512];
-    int ierr;
     snprintf(cmd, 512, "/bin/sh -c \"/home/eellis/bin/pstack1 %d\"", getpid());
-    ierr = system(cmd);
+    system(cmd);
     fflush(stdout);
 }
 
@@ -70,10 +72,9 @@ void msg(const char *fmt, ...)
  */
 char *getPortFromFile(const char *fmt, ...)
 {
-    char fname[PATH_MAX];
+    char fname[FNAME_SIZE];
     char dirname[PATH_MAX];
     char *retPort;
-    char *cerr;
     va_list ap;
     FILE *fp;
     int done = 0;
@@ -82,7 +83,7 @@ char *getPortFromFile(const char *fmt, ...)
     retPort = (char *) calloc(MPI_MAX_PORT_NAME + 1, sizeof(char));
 
     va_start(ap, fmt);
-    vsnprintf(fname, PATH_MAX, fmt, ap);
+    vsnprintf(fname, FNAME_SIZE, fmt, ap);
     va_end(ap);
 
     srand(getpid());
@@ -91,7 +92,7 @@ char *getPortFromFile(const char *fmt, ...)
         count += rand();
         fp = fopen(fname, "rt");
         if (fp != NULL) {
-            cerr = fgets(retPort, MPI_MAX_PORT_NAME, fp);
+            fgets(retPort, MPI_MAX_PORT_NAME, fp);
             fclose(fp);
             /* ignore bogus tag - assume that the real tag must be longer than 8
              * characters */

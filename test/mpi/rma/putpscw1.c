@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
                 }
                 MPI_Group_free(&neighbors);
                 err =
-                    MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
+                    MPI_Put((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
                             target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     errs++;

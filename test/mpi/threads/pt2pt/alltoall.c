@@ -49,7 +49,7 @@ MTEST_THREAD_RETURN_TYPE listener(void *extra)
         /* get request source */
         source = stat.MPI_SOURCE;
 
-        DEBUG(printf("node %d got request %d from %d\n", rank, req, source));
+        MTestPrintfMsg(1, "node %d got request %d from %d\n", rank, req, source);
 
         if (req == -1)
             ++no_fins;  /* one more node finished requesting */

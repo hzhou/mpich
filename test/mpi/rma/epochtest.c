@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 
             if (rank == orig) {
                 err =
-                    MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
+                    MPI_Put((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
                             target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
                 }
 
                 err =
-                    MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, orig,
+                    MPI_Put((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, orig,
                             target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
                 }
 
                 err =
-                    MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
+                    MPI_Put((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
                             target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
             }
             if (rank == target) {
                 err =
-                    MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, orig,
+                    MPI_Put((char *) origbuf + orig_obj.DTP_buf_offset, origcount, origtype, orig,
                             target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)

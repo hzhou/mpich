@@ -21,11 +21,10 @@ int main(int argc, char *argv[])
     int errs = 0, err;
     int rank, size, root;
     int minsize = 2;
-    int i, j, seed, testsize;
+    int i, seed, testsize;
     MPI_Aint count;
     MPI_Aint maxbufsize;
     MPI_Comm comm;
-    MPI_Datatype type;
     DTP_pool_s dtp;
     DTP_obj_s obj;
     void *buf;
@@ -107,9 +106,8 @@ int main(int argc, char *argv[])
                 }
                 MTestCopyContent(buf_h, buf, obj.DTP_bufsize, memtype);
 
-                err =
-                    MPI_Bcast(buf + obj.DTP_buf_offset, obj.DTP_type_count, obj.DTP_datatype, root,
-                              comm);
+                err = MPI_Bcast((char *) buf + obj.DTP_buf_offset,
+                                obj.DTP_type_count, obj.DTP_datatype, root, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);

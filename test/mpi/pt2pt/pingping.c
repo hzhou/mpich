@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     int errs = 0, err;
     int rank, size, source, dest;
     int minsize = 2, nmsg, maxmsg;
-    int i, j, len, seed, testsize;
+    int i, seed, testsize;
     MPI_Aint sendcount, recvcount, count[2];
     MPI_Aint maxbufsize;
     MPI_Comm comm;
@@ -122,9 +122,8 @@ int main(int argc, char *argv[])
                 free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
-                    err =
-                        MPI_Send(sendbuf + send_obj.DTP_buf_offset, sendcount, sendtype, dest, 0,
-                                 comm);
+                    err = MPI_Send((const char *) sendbuf + send_obj.DTP_buf_offset,
+                                   sendcount, sendtype, dest, 0, comm);
                     if (err) {
                         errs++;
                         if (errs < 10) {
@@ -149,9 +148,8 @@ int main(int argc, char *argv[])
                     }
                     MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, recvmem);
 
-                    err =
-                        MPI_Recv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, source, 0,
-                                 comm, MPI_STATUS_IGNORE);
+                    err = MPI_Recv((char *) recvbuf + recv_obj.DTP_buf_offset,
+                                   recvcount, recvtype, source, 0, comm, MPI_STATUS_IGNORE);
                     if (err) {
                         errs++;
                         if (errs < 10) {
