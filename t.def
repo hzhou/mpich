@@ -1,0 +1,55 @@
+include: c/mpi.def
+page: t, mpi_frame
+    # run: gdb
+    $dump $(rank), $(size)
+
+    $(if:1)
+        # $call test
+        $call test_vector
+    $(elif:0)
+        $call test_subarray
+    $(elif:0)
+        $call test_darray
+    $(else)
+        $call test_1
+
+macros:
+    dump_type: MPIX_Type_dump_typemap
+    # dump_type: MPIX_Type_dump_typesig
+
+subcode: test
+    &call Type_commit, MPI_SHORT_INT
+        $call type_struct, MPI_INT, 4, 0, MPI_DOUBLE, 8, 16
+        $call type_struct, $(dt), 1, 0, $(dt), 0, 100, $(dt), 1, 0, $(dt), 0, 100
+        # $call type_subarray, 4, [2, 1, 1, 1], [2, 1, 1, 1], [0, 0, 0, 0]
+        $(dump_type)($(dt))
+
+subcode: test_a1
+    &call Type_commit, MPI_SHORT_INT
+        $call type_struct, MPI_INT, 4, 0, MPI_DOUBLE, 8, 16
+        $call type_subarray, 4, [1, 1, 1, 1], [1, 1, 1, 1], [0, 0, 0, 0]
+        $call type_blkhidx, 1, 2, 8
+        $(dump_type)($(dt))
+
+subcode: test_1
+    &call Type_commit, MPI_SHORT_INT
+        $call type_contig, 2
+        $call type_hvector, 2, 1, 10
+        $call type_struct, MPI_INT, 1, 0, MPI_SHORT, 10, 8, $(dt), 1, 100
+        $call type_contig, 2
+        $(dump_type)($(dt))
+
+subcode: test_vector
+    &call Type_commit, MPI_CHAR
+        $call type_vector, 4, 2, 3
+        $(dump_type)($(dt))
+
+subcode: test_subarray
+    &call Type_commit, MPI_CHAR
+        $call type_subarray, 3, [4, 5, 10], [2, 2, 2], [0, 1, 1]
+        $(dump_type)($(dt))
+
+subcode: test_darray
+    &call Type_commit, MPI_CHAR
+        $call type_darray, 10, 5, 3, [4, 4, 10], [2, -, 5], [1, -, 1]
+        $(dump_type)($(dt))
