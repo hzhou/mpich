@@ -23,6 +23,16 @@ cvars:
       description : >-
         If on, poll global progress every once a while. With per-vci configuration, turning global progress off may improve the threading performance.
 
+    - name        : MPIR_CVAR_CH4_DEBUG_PROGRESS_TIMEOUT
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the timeout in seconds to dump outstanding requests when progress wait is not making progress for some time.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -323,6 +333,35 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
 #define MPIDI_PROGRESS_YIELD() MPL_thread_yield()
 #endif
 
+#ifdef MPICH_DEBUG_REQUEST
+#define PROGRESS_START \
+    int iter = 0; \
+    MPL_time_t time_start; \
+    if (MPIR_CVAR_CH4_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        MPL_wtime(&time_start); \
+    }
+
+#define PROGRESS_CHECK \
+    if (MPIR_CVAR_CH4_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        iter++; \
+        if (iter == 0xffff) {\
+            double time_diff = 0.0; \
+            MPL_time_t time_cur; \
+            MPL_wtime(&time_cur); \
+            MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
+            if (time_diff > MPIR_CVAR_CH4_DEBUG_PROGRESS_TIMEOUT) { \
+                MPIR_Request_debug(); \
+            } else { \
+                iter = 0; \
+            } \
+        } \
+    }
+
+#else
+#define PROGRESS_START do {} while (0)
+#define PROGRESS_CHECK do {} while (0)
+#endif
+
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -330,12 +369,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_ENTER;
 
     state->progress_made = 0;
+    PROGRESS_START;
     while (1) {
         mpi_errno = MPIDI_progress_test(state, 1);
         MPIR_ERR_CHECK(mpi_errno);
         if (state->progress_made) {
             break;
         }
+        PROGRESS_CHECK;
         MPIDI_PROGRESS_YIELD();
     }
 
