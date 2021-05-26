@@ -130,6 +130,7 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
         obj_priv = obj->priv;
 
         obj_priv->dtp = dtp;
+        obj_priv->desc = NULL;
 
         rc = DTPI_construct_datatype(dtp, attr_tree_depth, &obj_priv->attr_tree,
                                      &obj->DTP_datatype, &obj->DTP_type_count);
@@ -256,16 +257,23 @@ int DTP_obj_create_custom(DTP_pool_s dtp, DTP_obj_s * obj, const char *desc)
     goto fn_exit;
 }
 
-int DTP_obj_get_description(DTP_obj_s obj, char **desc)
+const char *DTP_obj_get_description(DTP_obj_s obj)
 {
     DTPI_obj_s *obj_priv = obj.priv;
     int rc = DTP_SUCCESS;
+    char *desc = NULL;
 
-    rc = DTPI_populate_dtp_desc(obj_priv, obj_priv->dtp.priv, desc);
+    if (obj_priv->desc) {
+        goto fn_exit;
+    }
+
+    rc = DTPI_populate_dtp_desc(obj_priv, obj_priv->dtp.priv, &desc);
     DTPI_ERR_CHK_RC(rc);
 
+    obj_priv->desc = desc;
+
   fn_exit:
-    return rc;
+    return obj_priv->desc;
 
   fn_fail:
     goto fn_exit;
@@ -286,6 +294,9 @@ int DTP_obj_free(DTP_obj_s obj)
         DTPI_ERR_CHK_MPI_RC(rc);
     }
 
+    if (obj_priv->desc) {
+        DTPI_FREE((char *) obj_priv->desc);
+    }
     DTPI_obj_free(obj_priv);
     DTPI_FREE(obj.priv);
 

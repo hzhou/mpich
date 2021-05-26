@@ -40,7 +40,7 @@ int DTP_obj_create_idx(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize, int
 int DTP_obj_create_custom(DTP_pool_s dtp, DTP_obj_s * obj, const char *desc);
 
 int DTP_obj_free(DTP_obj_s obj);
-int DTP_obj_get_description(DTP_obj_s obj, char **desc);
+const char *DTP_obj_get_description(DTP_obj_s obj);
 
 int DTP_obj_buf_init(DTP_obj_s obj, void *buf, int val_start, int val_stride, MPI_Aint val_count);
 int DTP_obj_buf_check(DTP_obj_s obj, void *buf, int val_start, int val_stride, MPI_Aint val_count);
