@@ -1,0 +1,43 @@
+name: warnings
+
+on:
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Check environment
+              shell: bash -xe {0}
+              run: |
+                  pwd
+                  gcc --version
+                  git log -n 20 --format="format:%h %ad %s" --date="format:%m/%d %H:%M"
+                  git clone https://github.com/hzhou/mymake_mpich mymake
+                  wget --no-verbose https://github.com/hzhou/mymake_mpich/releases/download/v0.01/modules-yaksa-new.tar.gz
+
+            - name: Compile
+              shell: bash -xe {0}
+              env:
+                  MYCONFIG: --disable-cxx --disable-fortran --disable-romio --enable-strict --enable-g=dbg
+              run: |
+                  perl mymake/mymake.pl --with-device=ch4:ofi $MYCONFIG -quick
+                  make -j16 install | tee make.log
+                  make -j16 hydra-install
+
+            - name: Test
+              shell: bash -xe {0}
+              run: |
+                  export PATH=$PWD/_inst/bin:$PATH
+                  export LD_LIBRARY_PATH=$PWD/_inst/lib
+                  make test
+                  make cpi
+                  mpirun -n 2 ./cpi
+
+            - name: Report
+              shell: bash -xe {0}
+              run: |
+                  perl mymake/report_make_log.pl make.log gcc 1
