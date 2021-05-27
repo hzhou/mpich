@@ -8,7 +8,8 @@
 
 #include "posix_impl.h"
 
-static inline int MPIDI_POSIX_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_start(MPIR_Group * group, int assert,
+                                                       MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -22,7 +23,7 @@ static inline int MPIDI_POSIX_mpi_win_start(MPIR_Group * group, int assert, MPIR
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_complete(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -36,7 +37,8 @@ static inline int MPIDI_POSIX_mpi_win_complete(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_post(MPIR_Group * group, int assert,
+                                                      MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -50,7 +52,7 @@ static inline int MPIDI_POSIX_mpi_win_post(MPIR_Group * group, int assert, MPIR_
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_wait(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_wait(MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -64,7 +66,7 @@ static inline int MPIDI_POSIX_mpi_win_wait(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_test(MPIR_Win * win, int *flag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno;
 
@@ -78,7 +80,8 @@ static inline int MPIDI_POSIX_mpi_win_test(MPIR_Win * win, int *flag)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_lock(int lock_type, int rank, int assert,
+                                                      MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -92,7 +95,7 @@ static inline int MPIDI_POSIX_mpi_win_lock(int lock_type, int rank, int assert, 
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_unlock(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -106,7 +109,7 @@ static inline int MPIDI_POSIX_mpi_win_unlock(int rank, MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_fence(int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_fence(int assert, MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -120,9 +123,10 @@ static inline int MPIDI_POSIX_mpi_win_fence(int assert, MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_shared_query(MPIR_Win * win,
-                                                   int rank,
-                                                   MPI_Aint * size, int *disp_unit, void *baseptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_shared_query(MPIR_Win * win,
+                                                              int rank,
+                                                              MPI_Aint * size, int *disp_unit,
+                                                              void *baseptr)
 {
     int mpi_errno;
 
@@ -136,7 +140,7 @@ static inline int MPIDI_POSIX_mpi_win_shared_query(MPIR_Win * win,
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_flush(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -150,7 +154,7 @@ static inline int MPIDI_POSIX_mpi_win_flush(int rank, MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_flush_local_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -164,7 +168,7 @@ static inline int MPIDI_POSIX_mpi_win_flush_local_all(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_unlock_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -178,7 +182,7 @@ static inline int MPIDI_POSIX_mpi_win_unlock_all(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_flush_local(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -192,7 +196,7 @@ static inline int MPIDI_POSIX_mpi_win_flush_local(int rank, MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_sync(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_sync(MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -206,7 +210,7 @@ static inline int MPIDI_POSIX_mpi_win_sync(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_flush_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -220,7 +224,7 @@ static inline int MPIDI_POSIX_mpi_win_flush_all(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_mpi_win_lock_all(int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno;
 
@@ -234,7 +238,7 @@ static inline int MPIDI_POSIX_mpi_win_lock_all(int assert, MPIR_Win * win)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win ATTRIBUTE((unused)))
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
@@ -242,11 +246,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win ATTRIB
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
 
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win ATTRIBUTE((unused)))
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
@@ -254,12 +261,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win 
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
 
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_cmpl_hook(int rank ATTRIBUTE((unused)),
-                                                              MPIR_Win * win ATTRIBUTE((unused)))
+                                                              MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
@@ -267,19 +277,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_cmpl_hook(int rank ATTRIBUTE
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
 
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_local_cmpl_hook(int rank ATTRIBUTE((unused)),
-                                                                    MPIR_Win *
-                                                                    win ATTRIBUTE((unused)))
+                                                                    MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
 
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
+
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
     return MPI_SUCCESS;
@@ -318,5 +333,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_op_cs_exit_hook(MPIR_Win * win)
   fn_fail:
     goto fn_exit;
 }
+
+/* non-inlined function prototypes */
+
+int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win);
 
 #endif /* POSIX_WIN_H_INCLUDED */

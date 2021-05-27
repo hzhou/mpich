@@ -132,6 +132,8 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
 
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_POSIX_am_request_header_t)
+                            < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
     mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
                                                       MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
                                                       MPIDI_POSIX_AM_HDR_POOL_MAX_NUM_CELLS,
@@ -160,11 +162,11 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     /* This is used to track messages that the eager submodule was not ready to send. */
     MPIDI_POSIX_global.postponed_queue = NULL;
 
-    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.active_rreq,
-                        MPIR_Request **,
-                        size * sizeof(MPIR_Request *), mpi_errno, "active recv req", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.active_rreq, MPIR_Request **,
+                        MPIR_Process.local_size * sizeof(MPIR_Request *), mpi_errno,
+                        "active recv req", MPL_MEM_SHM);
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < MPIR_Process.local_size; i++) {
         MPIDI_POSIX_global.active_rreq[i] = NULL;
     }
 
@@ -172,9 +174,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
 
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
-
-    /* There is no restriction on the tag_bits from the posix shmod side */
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
@@ -255,6 +254,7 @@ int MPIDI_POSIX_coll_init(int rank, int size)
 int MPIDI_POSIX_coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    static MPL_atomic_uint64_t MPIDI_POSIX_dummy_shm_limit_counter;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
@@ -262,6 +262,11 @@ int MPIDI_POSIX_coll_finalize(void)
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
+
+    /* MPIDI_POSIX_global.shm_ptr is freed but will be referenced during builtin
+     * comm free; here we set MPIDI_POSIX_shm_limit_counter as dummy counter to
+     * avoid segmentation fault */
+    MPIDI_POSIX_shm_limit_counter = &MPIDI_POSIX_dummy_shm_limit_counter;
 
     if (MPIDI_global.shm.posix.csel_root) {
         mpi_errno = MPIR_Csel_free(MPIDI_global.shm.posix.csel_root);
@@ -281,16 +286,14 @@ int MPIDI_POSIX_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_POSIX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
-    MPIR_Assert(0);
-    return NULL;
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 int MPIDI_POSIX_mpi_free_mem(void *ptr)
 {
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
@@ -301,12 +304,6 @@ int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, cha
 
 int MPIDI_POSIX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                                 int **remote_lupids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

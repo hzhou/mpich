@@ -9,11 +9,14 @@
 #ifndef POSIX_EAGER_INLINE
 #ifndef POSIX_EAGER_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
-                                                    MPIDI_POSIX_am_header_t ** msg_hdr,
-                                                    struct iovec **iov, size_t * iov_num)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr,
+                                                    const void *am_hdr, MPI_Aint am_hdr_sz,
+                                                    const void *buf, MPI_Aint count,
+                                                    MPI_Datatype datatype, MPI_Aint offset,
+                                                    MPI_Aint * bytes_sent)
 {
-    return MPIDI_POSIX_eager_func->send(grank, msg_hdr, iov, iov_num);
+    return MPIDI_POSIX_eager_func->send(grank, msg_hdr, am_hdr, am_hdr_sz, buf, count, datatype,
+                                        offset, bytes_sent);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
@@ -60,13 +63,10 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
 #else /* POSIX_EAGER_INLINE */
 
 #define __posix_eager_inline_stub__  0
-#define __posix_eager_inline_fbox__  1
-#define __posix_eager_inline_iqueue__  2
+#define __posix_eager_inline_iqueue__  1
 
 #if POSIX_EAGER_INLINE==__posix_eager_inline_stub__
 #include "../stub/posix_eager_inline.h"
-#elif POSIX_EAGER_INLINE==__posix_eager_inline_fbox__
-#include "../fbox/posix_eager_inline.h"
 #elif POSIX_EAGER_INLINE==__posix_eager_inline_iqueue__
 #include "../iqueue/posix_eager_inline.h"
 #else

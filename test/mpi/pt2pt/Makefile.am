@@ -24,11 +24,14 @@ noinst_PROGRAMS =  \
     isendself      \
     issendselfcancel \
     isendirecv     \
+    isendrecv      \
+    isendrecv_replace \
     eagerdt        \
     isendselfprobe \
     bsendfrag      \
     bsendpending   \
     icsend         \
+    icprobe        \
     rqstatus       \
     rqfreeb        \
     greq1          \
@@ -64,6 +67,7 @@ noinst_PROGRAMS =  \
     pingping_barrier  \
     sendrecv1 \
     sendself \
+    pt2pt_large \
     precv_anysrc \
     precv_anysrc_exp
 

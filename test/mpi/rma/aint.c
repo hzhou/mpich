@@ -19,9 +19,9 @@ int main(int argc, char **argv)
     int errs = 0;
     int array[1024];
     int val = 0;
-    int target_rank;
+    int target_rank = 0;        /* suppress warnings */
     MPI_Aint bases[2];
-    MPI_Aint disp, offset;
+    MPI_Aint disp, offset = 0;  /* suppress warnings */
     MPI_Win win;
 
     MTest_Init(&argc, &argv);
@@ -47,8 +47,18 @@ int main(int argc, char **argv)
     /* Exchange bases */
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, bases, 1, MPI_AINT, MPI_COMM_WORLD);
 
-    MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    MPI_Info info = MPI_INFO_NULL;
+#ifdef USE_INFO_COLL_ATTACH
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "coll_attach", "true");
+#endif
+
+    MPI_Win_create_dynamic(info, MPI_COMM_WORLD, &win);
     MPI_Win_attach(win, array, sizeof(int) * 1024);
+
+#ifdef USE_INFO_COLL_ATTACH
+    MPI_Info_free(&info);
+#endif
 
     /* Do MPI_Aint addressing arithmetic */
     if (rank == 0) {

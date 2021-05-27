@@ -25,6 +25,54 @@ cvars:
         If false, performance-efficient mode is on, all allocated target
         objects are cached and freed at win_finalize.
 
+    - name        : MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, allows RMA synchronization calls to dynamically reduce the frequency
+        of internal progress polling for incoming RMA active messages received on
+        the target process. The RMA synchronization call initially polls progress
+        with a low frequency (defined by MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL)
+        to reduce synchronization overhead. Once any RMA active message has been
+        received, it will always poll progress once at every synchronization call
+        to ensure prompt target-side progress.
+        Effective only for passive target synchronization MPI_Win_flush{_all}
+        and MPI_Win_flush_local{_all}.
+
+    - name        : MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies a static interval of progress polling for incoming RMA active messages
+        received on the target process.
+        Effective only for passive-target synchronization MPI_Win_flush{_all} and
+        MPI_Win_flush_local{_all}. Interval indicates the number of performed
+        flush calls before polling. It is counted globally across all windows.
+        Invalid when MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS is true.
+
+    - name        : MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL
+      category    : CH4
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the interval of progress polling with low frequency for
+        incoming RMA active message received on the target process.
+        Effective only for passive-target synchronization MPI_Win_flush{_all} and
+        MPI_Win_flush_local{_all}. Interval indicates the number of performed
+        flush calls before polling. It is counted globally across all windows.
+        Used when MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS is true.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -46,8 +94,9 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm, void *baseptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr);
 
-static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
-                                               int *ranks_in_win_grp)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr,
+                                                          MPIR_Group * group_ptr,
+                                                          int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, *ranks_in_grp = NULL;
@@ -80,12 +129,13 @@ static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * 
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_START);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
@@ -94,7 +144,7 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
         goto no_check;
     }
 
-    MPIDIU_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).pw.count);
+    MPIDIU_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).pw.count, 0);
   no_check:
     MPIDIG_WIN(win, sync).pw.count = 0;
 
@@ -104,20 +154,21 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
     MPIDIG_WIN(win, sync).access_epoch_type = MPIDIG_EPOTYPE_START;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_START);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_cntrl_msg_t msg;
     int win_grp_idx, peer;
     MPIR_Group *group;
     int *ranks_in_win_grp = NULL;
-    int all_local_completed = 0;
+    int need_unlock = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
@@ -136,6 +187,9 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
+
     msg.win_id = MPIDIG_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
 
@@ -147,11 +201,8 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
-    do {
-        MPIDIU_PROGRESS();
-        MPIDIG_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
-                                               &all_local_completed);
-    } while (all_local_completed != 1);
+    MPIDIU_PROGRESS_DO_WHILE(!MPIDIG_win_check_group_local_completed
+                             (win, ranks_in_win_grp, group->size), 0);
 
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
@@ -159,12 +210,12 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(peer, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
-                                              MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
+                                              MPIDIG_WIN_COMPLETE, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
+                                             MPIDIG_WIN_COMPLETE, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -181,13 +232,16 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
   fn_exit:
     MPL_free(ranks_in_win_grp);
 
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_cntrl_msg_t msg;
@@ -196,6 +250,7 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_POST);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
@@ -224,12 +279,12 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(peer, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
-                                              MPIDIG_WIN_POST, &msg, sizeof(msg));
+                                              MPIDIG_WIN_POST, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_POST, &msg, sizeof(msg));
+                                             MPIDIG_WIN_POST, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -241,23 +296,25 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
   fn_exit:
     MPL_free(ranks_in_win_grp);
 
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_POST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_wait(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
     group = MPIDIG_WIN(win, sync).pw.group;
-    MPIDIU_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).sc.count);
+    MPIDIU_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).sc.count, 0);
 
     MPIDIG_WIN(win, sync).sc.count = 0;
     MPIDIG_WIN(win, sync).pw.group = NULL;
@@ -265,18 +322,20 @@ static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
     MPIDIG_WIN(win, sync).exposure_epoch_type = MPIDIG_EPOTYPE_NONE;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_TEST);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
 
@@ -297,19 +356,22 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
     }
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_TEST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert,
+                                                 MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned locked;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_LOCK_EPOCH_CHECK_NONE(win, rank, mpi_errno, goto fn_fail);
 
@@ -331,17 +393,19 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     locked = slock->locked + 1;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_rank_is_local(rank, win->comm_ptr))
-        mpi_errno = MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_SHM_am_send_hdr(rank, win->comm_ptr,
+                                          MPIDIG_WIN_LOCK, &msg, (MPI_Aint) sizeof(msg));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
+                                         MPIDIG_WIN_LOCK, &msg, (MPI_Aint) sizeof(msg));
     }
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
-    MPIDIU_PROGRESS_WHILE(slock->locked != locked);
+    MPIDIU_PROGRESS_WHILE(slock->locked != locked, 0);
   no_check:
     target_ptr->sync.access_epoch_type = MPIDIG_EPOTYPE_LOCK;
 
@@ -349,17 +413,19 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     MPIDIG_WIN(win, sync).lock.count++;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned unlocked;
     MPIDIG_win_cntrl_msg_t msg;
+    int need_unlock = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
@@ -386,9 +452,12 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
+
     /* Ensure completion of AM operations */
     MPIDIU_PROGRESS_DO_WHILE(MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
-                             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0);
+                             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0, 0);
 
     if (target_ptr->sync.assert_mode & MPI_MODE_NOCHECK) {
         target_ptr->sync.lock.locked = 0;
@@ -402,17 +471,19 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_rank_is_local(rank, win->comm_ptr))
         mpi_errno =
-            MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
+            MPIDI_SHM_am_send_hdr(rank, win->comm_ptr,
+                                  MPIDIG_WIN_UNLOCK, &msg, (MPI_Aint) sizeof(msg));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
+                                         MPIDIG_WIN_UNLOCK, &msg, (MPI_Aint) sizeof(msg));
     }
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
-    MPIDIU_PROGRESS_WHILE(slock->locked != unlocked);
+    MPIDIU_PROGRESS_WHILE(slock->locked != unlocked, 0);
   no_check:
     /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
     if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
@@ -427,6 +498,9 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     }
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
     return mpi_errno;
   fn_fail:
@@ -434,10 +508,11 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 
 }
 
-static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int need_unlock = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
 
@@ -452,9 +527,12 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
+
     /* Ensure completion of AM operations */
     MPIDIU_PROGRESS_DO_WHILE(MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) != 0 ||
-                             MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0);
+                             MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0, 0);
     MPIDIG_EPOCH_FENCE_EVENT(win, massert);
 
     /*
@@ -473,18 +551,21 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
      * In VCI granularity, individual send/recv/wait operations will take
      * the VCI lock internally. */
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 0;
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
-                                              int *disp_unit, void *baseptr)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
+                                                         int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int offset = rank;
@@ -529,9 +610,10 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
     return mpi_errno;
 }
 
-static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int need_unlock = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
 
@@ -547,6 +629,9 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
+
     /* Ensure completion of AM operations issued to the target.
      * If target object is not created (e.g., when all operations issued
      * to the target were via shm and in lockall), we also need trigger
@@ -557,20 +642,25 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    MPIDIU_PROGRESS_DO_WHILE(target_ptr && (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
-                                            MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0));
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+    MPIDIU_PROGRESS_WHILE((target_ptr && (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+                                          MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0)) ||
+                          poll_once-- > 0, 0);
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    int all_local_completed = 0;
+    int need_unlock = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
 
@@ -585,30 +675,35 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
+
     /* Ensure completion of AM operations */
 
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
-    do {
-        MPIDIU_PROGRESS();
-        MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
-    } while (all_local_completed != 1);
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+
+    MPIDIU_PROGRESS_WHILE((!MPIDIG_win_check_all_targets_local_completed(win) || poll_once-- > 0),
+                          0);
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int need_unlock = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     int i;
-
-    int all_remote_completed = 0;
 
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK_ALL, mpi_errno, return mpi_errno);
     /* NOTE: lockall blocking waits till all locks granted */
@@ -623,14 +718,14 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
+
     /* Ensure completion of AM operations */
 
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
-    do {
-        MPIDIU_PROGRESS();
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
-    } while (all_remote_completed != 1);
+    MPIDIU_PROGRESS_DO_WHILE(!MPIDIG_win_check_all_targets_remote_completed(win), 0);
 
     if (MPIDIG_WIN(win, sync).assert_mode & MPI_MODE_NOCHECK) {
         MPIDIG_WIN(win, sync).lockall.allLocked = 0;
@@ -644,19 +739,19 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(i, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
-                                              MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
+                                              MPIDIG_WIN_UNLOCKALL, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
+                                             MPIDIG_WIN_UNLOCKALL, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPIDIU_PROGRESS_WHILE(MPIDIG_WIN(win, sync).lockall.allLocked);
+    MPIDIU_PROGRESS_WHILE(MPIDIG_WIN(win, sync).lockall.allLocked, 0);
   no_check:
     /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
     if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
@@ -665,15 +760,19 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     MPIDIG_WIN(win, sync).assert_mode = 0;
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int need_unlock = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
 
@@ -689,6 +788,8 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
     /* Ensure completion of AM operations issued to the target.
      * If target object is not created (e.g., when all operations issued
      * to the target were via shm and in lockall), we also need trigger
@@ -699,16 +800,21 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    MPIDIU_PROGRESS_DO_WHILE(target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+    MPIDIU_PROGRESS_WHILE(((target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) ||
+                           poll_once-- > 0), 0);
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_sync(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
@@ -724,10 +830,10 @@ static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    int all_remote_completed = 0;
+    int need_unlock = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
 
@@ -742,28 +848,35 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    /* Ensure completion of AM operations */
-    do {
-        MPIDIU_PROGRESS();
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    need_unlock = 1;
 
-        /* FIXME: now we simply set per-target counters for lockall in case
-         * user flushes per target, but this should be optimized. */
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
-    } while (all_remote_completed != 1);
+    /* Ensure completion of AM operations */
+
+    /* FIXME: now we simply set per-target counters for lockall in case
+     * user flushes per target, but this should be optimized. */
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+
+    MPIDIU_PROGRESS_WHILE((!MPIDIG_win_check_all_targets_remote_completed(win) || poll_once-- > 0),
+                          0);
 
   fn_exit:
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
@@ -787,23 +900,24 @@ static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(i, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
-                                              MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
+                                              MPIDIG_WIN_LOCKALL, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
+                                             MPIDIG_WIN_LOCKALL, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPIDIU_PROGRESS_WHILE(size != (int) MPIDIG_WIN(win, sync).lockall.allLocked);
+    MPIDIU_PROGRESS_WHILE(size != (int) MPIDIG_WIN(win, sync).lockall.allLocked, 0);
   no_check:
     MPIDIG_WIN(win, sync).access_epoch_type = MPIDIG_EPOTYPE_LOCK_ALL;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
     return mpi_errno;
   fn_fail:

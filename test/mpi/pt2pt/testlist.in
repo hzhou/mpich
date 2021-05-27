@@ -1,5 +1,6 @@
 sendrecv2 2
 sendrecv3 2
+sendrecv3 2 arg=-isendrecv
 sendflood 8
 sendall 4
 anyall 2
@@ -15,15 +16,22 @@ bsendpending 2
 isendself 1
 issendselfcancel 1 xfail=ticket2276
 isendirecv 10
+isendrecv 4
+isendrecv_replace 4
 bsendfrag 2
 icsend 4
+icsend 4 arg=-randomize=1
+icprobe 4
+icprobe 4 arg=-randomize=1
 rqstatus 2
 rqfreeb 4
 greq1 1
 probe_unexp 4
-probe_unexp 4 env=MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE=16384
+probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+probe_unexp 4 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 probenull 1
-probenull 1 env=MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE=16384
+probenull 1 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+probenull 1 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 # For testing, scancel will run with 1 process as well
 scancel 2 xfail=ticket2266 xfail=ticket2270
 scancel2 2 xfail=ticket2266 xfail=ticket2270
@@ -53,4 +61,6 @@ recv_any 2
 irecv_any 2
 large_tag 2
 precv_anysrc 2 timeLimit=60
+precv_anysrc 2 timeLimit=60 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 precv_anysrc_exp 2 timeLimit=60
+pt2pt_large 2

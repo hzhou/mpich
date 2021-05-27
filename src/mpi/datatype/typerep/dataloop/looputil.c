@@ -7,7 +7,7 @@
 #include "dataloop_internal.h"
 #include "datatype.h"
 #include "mpir_typerep.h"
-#include "looputil.h"
+#include "typerep_util.h"
 #include "veccpy.h"
 
 #define M2M_TO_USERBUF   0
@@ -124,36 +124,60 @@ static int external32_basic_convert(char *dest_buf,
     if (src_el_size == dest_el_size) {
         if (src_el_size == 2) {
             while (src_ptr != src_end) {
-                BASIC_convert16((*(const TWO_BYTE_BASIC_TYPE *) src_ptr),
-                                (*(TWO_BYTE_BASIC_TYPE *) dest_ptr));
+                BASIC_convert16(*(const uint16_t *) src_ptr, *(uint16_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else if (src_el_size == 4) {
             while (src_ptr != src_end) {
-                BASIC_convert32((*(const FOUR_BYTE_BASIC_TYPE *) src_ptr),
-                                (*(FOUR_BYTE_BASIC_TYPE *) dest_ptr));
+                BASIC_convert32(*(const uint32_t *) src_ptr, *(uint32_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else if (src_el_size == 8) {
             while (src_ptr != src_end) {
-                BASIC_convert64(src_ptr, dest_ptr);
+                BASIC_convert64(*(const uint64_t *) src_ptr, *(uint64_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         }
     } else {
-        /* TODO */
-        MPL_error_printf
-            ("Conversion of types whose size is not the same as the size in external32 is not supported\n");
-        MPID_Abort(0, MPI_SUCCESS, 1, "Aborting with internal error");
-        /* There is no way to return an error code, so an abort is the
-         * only choice (the return value of this routine is not
-         * an error code) */
+        if (src_el_size == 4) {
+            while (src_ptr != src_end) {
+                uint32_t tmp;
+                BASIC_convert32((*(const uint32_t *) src_ptr), tmp);
+                if (dest_el_size == 8) {
+                    /* NOTE: it's wrong if it is unsigned and highest bit is 1, but
+                     * at least only happens when number is in the higher half of the
+                     * range. It won't work if value overflow anyway. */
+                    *(int64_t *) dest_ptr = (int32_t) tmp;
+                } else {
+                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                }
+
+                src_ptr += src_el_size;
+                dest_ptr += dest_el_size;
+            }
+        } else if (src_el_size == 8) {
+            while (src_ptr != src_end) {
+                uint32_t tmp;
+                if (dest_el_size == 4) {
+                    /* NOTE: obviously won't work if overflow, but it is user's responsibility */
+                    tmp = (int32_t) (*(const int64_t *) src_ptr);
+                    BASIC_convert32(tmp, *(uint32_t *) dest_ptr);
+                } else {
+                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                }
+
+                src_ptr += src_el_size;
+                dest_ptr += dest_el_size;
+            }
+        } else {
+            MPIR_Assert(0 && "Unhandled conversion of unequal size");
+        }
     }
     return 0;
 }
@@ -169,22 +193,10 @@ static int external32_float_convert(char *dest_buf,
     MPIR_Assert(dest_buf && src_buf);
 
     if (src_el_size == dest_el_size) {
-        if (src_el_size == 4) {
-            while (src_ptr != src_end) {
-                FLOAT_convert((*(const FOUR_BYTE_FLOAT_TYPE *) src_ptr),
-                              (*(FOUR_BYTE_FLOAT_TYPE *) dest_ptr));
-
-                src_ptr += src_el_size;
-                dest_ptr += dest_el_size;
-            }
-        } else if (src_el_size == 8) {
-            while (src_ptr != src_end) {
-                FLOAT_convert((*(const EIGHT_BYTE_FLOAT_TYPE *) src_ptr),
-                              (*(EIGHT_BYTE_FLOAT_TYPE *) dest_ptr));
-
-                src_ptr += src_el_size;
-                dest_ptr += dest_el_size;
-            }
+        while (src_ptr != src_end) {
+            BASIC_convert(src_ptr, dest_ptr, src_el_size);
+            src_ptr += src_el_size;
+            dest_ptr += dest_el_size;
         }
     } else {
         /* TODO */
@@ -553,7 +565,7 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
         cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
 
         /* there was some casting going on here at one time but now all types
-         * are promoted ot big values */
+         * are promoted to big values */
         if (blocklen > blocks_left)
             blocklen = blocks_left;
 
@@ -651,7 +663,7 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Dataloop_get_basic_size_external32(el_type);
+    dest_el_size = MPII_Typerep_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
 
     /*
@@ -673,6 +685,11 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
         MPIR_Memcpy(paramp->u.pack.pack_buffer, ((char *) bufp) + rel_off, *blocks_p);
+    } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
+        /* treat as 2x floating point */
+        external32_float_convert(paramp->u.pack.pack_buffer,
+                                 ((char *) bufp) + rel_off,
+                                 dest_el_size / 2, src_el_size / 2, (*blocks_p) * 2);
     } else if (is_float_type(el_type)) {
         external32_float_convert(paramp->u.pack.pack_buffer,
                                  ((char *) bufp) + rel_off, dest_el_size, src_el_size, *blocks_p);
@@ -696,9 +713,9 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
-    src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Dataloop_get_basic_size_external32(el_type);
-    MPIR_Assert(dest_el_size);
+    dest_el_size = MPIR_Datatype_get_basic_size(el_type);
+    src_el_size = MPII_Typerep_get_basic_size_external32(el_type);
+    MPIR_Assert(src_el_size);
 
     /*
      * h  = handle value
@@ -720,6 +737,11 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
         MPIR_Memcpy(((char *) bufp) + rel_off, paramp->u.unpack.unpack_buffer, *blocks_p);
+    } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
+        /* treat as 2x floating point */
+        external32_float_convert(((char *) bufp) + rel_off,
+                                 paramp->u.unpack.unpack_buffer,
+                                 dest_el_size / 2, src_el_size / 2, (*blocks_p) * 2);
     } else if (is_float_type(el_type)) {
         external32_float_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
@@ -729,7 +751,7 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
                                  paramp->u.unpack.unpack_buffer,
                                  dest_el_size, src_el_size, *blocks_p);
     }
-    paramp->u.unpack.unpack_buffer += (dest_el_size * (*blocks_p));
+    paramp->u.unpack.unpack_buffer += (src_el_size * (*blocks_p));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
     return 0;
@@ -747,7 +769,7 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
     MPII_Segment_manipulate(segp, first, lastp, contig_pack_external32_to_buf, NULL,    /* MPIR_Segment_vector_pack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_pack_external32_to_buf, */
-                            MPII_Dataloop_get_basic_size_external32, &pack_params);
+                            MPII_Typerep_get_basic_size_external32, &pack_params);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_PACK_EXTERNAL32);
     return;
@@ -765,56 +787,9 @@ void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
     MPII_Segment_manipulate(segp, first, lastp, contig_unpack_external32_to_buf, NULL,  /* MPIR_Segment_vector_unpack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_unpack_external32_to_buf, */
-                            MPII_Dataloop_get_basic_size_external32, &pack_params);
+                            MPII_Typerep_get_basic_size_external32, &pack_params);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_UNPACK_EXTERNAL32);
-    return;
-}
-
-void MPIR_Type_access_contents(MPI_Datatype type,
-                               int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
-{
-    int nr_ints, nr_aints, nr_types, combiner;
-    int types_sz, struct_sz, ints_sz, epsilon;
-    MPIR_Datatype *dtp;
-    MPIR_Datatype_contents *cp;
-
-    MPIR_Type_get_envelope(type, &nr_ints, &nr_aints, &nr_types, &combiner);
-
-    /* hardcoded handling of MPICH contents format... */
-    MPIR_Datatype_get_ptr(type, dtp);
-    MPIR_Assert(dtp != NULL);
-
-    cp = dtp->contents;
-    MPIR_Assert(cp != NULL);
-
-    struct_sz = sizeof(MPIR_Datatype_contents);
-    types_sz = nr_types * sizeof(MPI_Datatype);
-    ints_sz = nr_ints * sizeof(int);
-
-    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
-        struct_sz += MAX_ALIGNMENT - epsilon;
-    }
-    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
-        types_sz += MAX_ALIGNMENT - epsilon;
-    }
-    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
-        ints_sz += MAX_ALIGNMENT - epsilon;
-    }
-    *types_p = (MPI_Datatype *) (((char *) cp) + struct_sz);
-    *ints_p = (int *) (((char *) (*types_p)) + types_sz);
-    *aints_p = (MPI_Aint *) (((char *) (*ints_p)) + ints_sz);
-    /* end of hardcoded handling of MPICH contents format */
-
-    return;
-}
-
-/* FIXME: Is this routine complete?  Why is it needed? If it is needed, it
-   must have a comment that describes why it is needed and the arguments
-   must have ATTRIBUTE((unused)) */
-void MPIR_Type_release_contents(MPI_Datatype type,
-                                int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
-{
     return;
 }
 
@@ -866,7 +841,7 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
 {
     int el_size, last_idx;
     MPI_Aint size;
-    char *last_end = NULL;
+    intptr_t last_end = 0;
     struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONTIG_PACK_TO_IOV);
 
@@ -884,11 +859,11 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
 
     last_idx = paramp->u.pack_vector.index - 1;
     if (last_idx >= 0) {
-        last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
+        last_end = ((intptr_t) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
             paramp->u.pack_vector.vectorp[last_idx].iov_len;
     }
 
-    if ((last_idx == paramp->u.pack_vector.length - 1) && (last_end != ((char *) bufp + rel_off))) {
+    if ((last_idx == paramp->u.pack_vector.length - 1) && (last_end != ((intptr_t) bufp + rel_off))) {
         /* we have used up all our entries, and this region doesn't fit on
          * the end of the last one.  setting blocks to 0 tells manipulation
          * function that we are done (and that we didn't process any blocks).
@@ -896,11 +871,11 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
         *blocks_p = 0;
         MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONTIG_PACK_TO_IOV);
         return 1;
-    } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
+    } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off))) {
         /* add this size to the last vector rather than using up another one */
         paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
     } else {
-        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (void *) ((intptr_t) bufp + rel_off);
         paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
         paramp->u.pack_vector.index++;
     }
@@ -953,7 +928,7 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
-        char *last_end = NULL;
+        intptr_t last_end = 0;
 
         if (blocks_left > (MPI_Aint) blksz) {
             size = ((MPI_Aint) blksz) * basic_size;
@@ -966,12 +941,12 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 
         last_idx = paramp->u.pack_vector.index - 1;
         if (last_idx >= 0) {
-            last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
+            last_end = ((intptr_t) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
                 paramp->u.pack_vector.vectorp[last_idx].iov_len;
         }
 
         if ((last_idx == paramp->u.pack_vector.length - 1) &&
-            (last_end != ((char *) bufp + rel_off))) {
+            (last_end != ((intptr_t) bufp + rel_off))) {
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
              */
@@ -985,11 +960,12 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 #endif
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_VECTOR_PACK_TO_IOV);
             return 1;
-        } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
+        } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off))) {
             /* add this size to the last vector rather than using up new one */
             paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
         } else {
-            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base =
+                (void *) ((intptr_t) bufp + rel_off);
             paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
             paramp->u.pack_vector.index++;
         }

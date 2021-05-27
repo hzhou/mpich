@@ -49,6 +49,10 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
     transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
 
+    /* ensure max alignment for payload */
+    MPIR_Assert((MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE & (MAX_ALIGNMENT - 1)) == 0);
+    MPIR_Assert((sizeof(MPIDI_POSIX_eager_iqueue_cell_t) & (MAX_ALIGNMENT - 1)) == 0);
+
     mpi_errno = MPIDU_genq_shmem_pool_create_unsafe(transport->size_of_cell, transport->num_cells,
                                                     MPIDI_POSIX_global.num_local,
                                                     MPIDI_POSIX_global.my_local_rank,
@@ -64,7 +68,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
 
     transport->my_terminal = &transport->terminals[MPIDI_POSIX_global.my_local_rank];
 
-    mpi_errno = MPIDU_genq_shmem_queue_init(transport->my_terminal, transport->cell_pool,
+    mpi_errno = MPIDU_genq_shmem_queue_init(transport->my_terminal,
                                             MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -81,7 +85,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_iqueue_finalize()
+int MPIDI_POSIX_iqueue_finalize(void)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     int mpi_errno;
@@ -94,9 +98,6 @@ int MPIDI_POSIX_iqueue_finalize()
     mpi_errno = MPIDU_Init_shm_free(transport->terminals);
     mpi_errno = MPIDU_genq_shmem_pool_destroy_unsafe(transport->cell_pool);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_IQUEUE_FINALIZE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

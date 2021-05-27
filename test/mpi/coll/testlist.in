@@ -1,6 +1,6 @@
-allred 4
-allred 7
-allred 4 arg=100
+allred 4 arg=-count=10
+allred 7 arg=-count=10
+allred 4 arg=-count=100
 allredmany 4
 allred2 4
 allred3 10
@@ -12,6 +12,7 @@ allred6 7
 reduce 5
 reduce 10
 reduce_local 2
+op_coll 4
 op_commutative 2
 red3 10
 red4 10
@@ -48,7 +49,6 @@ coll7 5
 coll8 4
 coll9 4
 coll10 4
-coll11 4
 coll12 4
 coll13 4
 longuser 4
@@ -168,3 +168,11 @@ neighb_allgatherv 4
 neighb_alltoall 4
 neighb_alltoallv 4
 neighb_alltoallw 4
+ring_neighbor_alltoall 2
+ring_neighbor_alltoall 1
+
+# Tests for persistent collectives
+p_bcast 4 strict=false
+p_bcast2 8 strict=false
+
+coll_large 8

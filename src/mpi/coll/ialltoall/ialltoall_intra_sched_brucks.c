@@ -18,9 +18,9 @@
  * where n is the total amount of data a process needs to send to all
  * other processes.
  */
-int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -117,13 +117,7 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, int sendcount, MPI_Da
         pof2 *= 2;
     }
 
-    /* Phase 3: Rotate blocks in recvbuf upwards by (rank + 1) blocks. Need
-     * a temporary buffer of the same size as recvbuf. */
-
-    /* not a leak, old tmp_buf value is still tracked by CHKPMEM macros */
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvcount * comm_size * recvtype_sz,
-                              mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
+    /* Phase 3: Rotate blocks in recvbuf upwards by (rank + 1) blocks */
     mpi_errno = MPIR_Sched_copy(((char *) recvbuf + (rank + 1) * recvcount * recvtype_extent),
                                 (comm_size - rank - 1) * recvcount, recvtype,
                                 tmp_buf, (comm_size - rank - 1) * recvcount * recvtype_sz,

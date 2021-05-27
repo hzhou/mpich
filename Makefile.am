@@ -3,12 +3,12 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-ACLOCAL_AMFLAGS = -I confdb -I modules/hwloc/config
+ACLOCAL_AMFLAGS = -I confdb
 
 # automake requires that we initialize variables to something, even just empty,
 # before appending to them with "+="
-AM_CFLAGS = @VISIBILITY_CFLAGS@ @HWLOC_EMBEDDED_CFLAGS@
-AM_CPPFLAGS = @HWLOC_EMBEDDED_CPPFLAGS@
+AM_CFLAGS = @VISIBILITY_CFLAGS@
+AM_CPPFLAGS =
 AM_FFLAGS =
 AM_FCFLAGS =
 include_HEADERS =
@@ -49,7 +49,7 @@ pkgconfigdir = @pkgconfigdir@
 errnames_txt_files = 
 
 external_subdirs = @mplsrcdir@ @zmsrcdir@ @hwlocsrcdir@ @jsonsrcdir@ @yaksasrcdir@
-external_ldflags = @mpllibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@ @yaksalibdir@
+external_ldflags = @mpllibdir@ @zmlibdir@ @yaksalibdir@
 external_libs = @WRAPPER_LIBS@
 mpi_convenience_libs =
 pmpi_convenience_libs = @mpllib@ @zmlib@ @hwloclib@ @jsonlib@ @yaksalib@
@@ -65,25 +65,6 @@ pmpi_convenience_libs = @mpllib@ @zmlib@ @hwloclib@ @jsonlib@ @yaksalib@
 DIST_SUBDIRS = ${external_subdirs}
 SUBDIRS = ${external_subdirs}
 
-## Automake attempts to guess the correct linker among the various compilers
-## for each language (see "How the Linker is Chosen" in the AM manual).
-## However, this process is static and doesn't assume that you will "disable"
-## Fortran support for a library and still actually build that library.
-## lib@MPILIBNAME@.la contains both C and F77 source, so AM picks "F77LD" as the
-## linker.  Instead we manually override automake's choice based on the value of
-## enable_f77.
-if BUILD_F77_BINDING
-# link with libtool+F77LD
-lib_lib@MPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
-	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@MPILIBNAME@_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
-lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
-	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@PMPILIBNAME@_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
-else !BUILD_F77_BINDING
-# link with libtool+CCLD
 lib_lib@MPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lib_lib@MPILIBNAME@_la_CFLAGS) $(CFLAGS) \
@@ -92,7 +73,6 @@ lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lib_lib@PMPILIBNAME@_la_CFLAGS) $(CFLAGS) \
 	$(lib_lib@PMPILIBNAME@_la_LDFLAGS) $(LDFLAGS) -o $@
-endif !BUILD_F77_BINDING
 
 if BUILD_F77_BINDING
 if BUILD_FC_BINDING

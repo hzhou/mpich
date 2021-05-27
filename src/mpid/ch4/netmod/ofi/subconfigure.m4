@@ -23,13 +23,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
     fi
 
-        AC_ARG_ENABLE(ch4-ofi-ipv6,
-            AC_HELP_STRING([--disable-ch4-ofi-ipv6], [Skip providers with addr_format FI_SOCKADDR_IN6])
-        )
-
-        if test "x$enable_ch4_ofi_ipv6" = "xno" ; then
-            AC_DEFINE(MPIDI_CH4_OFI_SKIP_IPV6, 1, [CH4-OFI should skip providers with IPv6])
-        fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
 ])dnl
@@ -43,11 +36,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     ofilib=""
     AC_SUBST([ofilib])
 
-    ofi_embedded=""
-    if test $have_libfabric = no ; then
-        ofi_embedded="yes"
-    fi
-
     runtime_capabilities="no"
     no_providers="no"
     # $netmod_args - contains the OFI provider
@@ -57,7 +45,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     elif test "x$netmod_args" = "x" || test "$netmod_args" = "runtime"; then
         runtime_capabilities="yes"
         no_providers="yes"
-        AC_MSG_NOTICE([Using runtime capability set due to no selected provider or explicity runtime selection])
+        AC_MSG_NOTICE([Using runtime capability set due to no selected provider or explicitly runtime selection])
     fi
 
     if test "$no_providers" = "no" ; then
@@ -118,6 +106,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "bgq")
                 enable_bgq="yes"
+                ;;
+            "verbs;ofi_rxm")
+                enable_verbs="yes"
+                enable_rxm="yes"
                 ;;
 
             dnl For these providers, we don't know exactly which capabilities we
@@ -197,7 +189,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 enable_sockets="yes"
                 ;;
             "gni")
-                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_GNI], [1], [Define to use gni capability set])
                 enable_gni="yes"
                 ;;
             "bgq")
@@ -256,43 +248,52 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_netdir="yes"
                 ;;
+            "verbs;ofi_rxm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_VERBS_RXM], [1], [Define to use verbs;ofi_rxm capability set])
+                enable_verbs="yes"
+                enable_rxm="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
     fi
 
-    if test "${ofi_embedded}" = "yes" ; then
+    if test "$pac_have_libfabric" = "no" ; then
+        with_libfabric=embedded
+    fi
+    if test "$with_libfabric" = "embedded" ; then
+        ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
         ofi_subdir_args="--enable-embedded"
 
         prov_config=""
         if test "x${netmod_args}" != "x" ; then
-            prov_config+=" --enable-psm=${enable_psm}"
-            prov_config+=" --enable-psm2=${enable_psm2}"
-            prov_config+=" --enable-sockets=${enable_sockets}"
-            prov_config+=" --enable-verbs=${enable_verbs}"
-            prov_config+=" --enable-usnic=${enable_usnic}"
-            prov_config+=" --enable-gni=${enable_gni}"
-            prov_config+=" --enable-bgq=${enable_bgq}"
-            prov_config+=" --enable-udp=${enable_udp}"
-            prov_config+=" --enable-rxm=${enable_rxm}"
-            prov_config+=" --enable-rxd=${enable_rxd}"
-            prov_config+=" --enable-tcp=${enable_tcp}"
-            prov_config+=" --enable-shm=${enable_shm}"
-            prov_config+=" --enable-mlx=${enable_mlx}"
-            prov_config+=" --enable-perf=${enable_perf}"
-            prov_config+=" --enable-rstream=${enable_rstream}"
-            prov_config+=" --enable-mrail=${enable_mrail}"
-            prov_config+=" --enable-efa=${enable_efa}"
-            prov_config+=" --enable-netdir=${enable_netdir}"
+            prov_config="$prov_config --enable-psm=${enable_psm}"
+            prov_config="$prov_config --enable-psm2=${enable_psm2}"
+            prov_config="$prov_config --enable-sockets=${enable_sockets}"
+            prov_config="$prov_config --enable-verbs=${enable_verbs}"
+            prov_config="$prov_config --enable-usnic=${enable_usnic}"
+            prov_config="$prov_config --enable-gni=${enable_gni}"
+            prov_config="$prov_config --enable-bgq=${enable_bgq}"
+            prov_config="$prov_config --enable-udp=${enable_udp}"
+            prov_config="$prov_config --enable-rxm=${enable_rxm}"
+            prov_config="$prov_config --enable-rxd=${enable_rxd}"
+            prov_config="$prov_config --enable-tcp=${enable_tcp}"
+            prov_config="$prov_config --enable-shm=${enable_shm}"
+            prov_config="$prov_config --enable-mlx=${enable_mlx}"
+            prov_config="$prov_config --enable-perf=${enable_perf}"
+            prov_config="$prov_config --enable-rstream=${enable_rstream}"
+            prov_config="$prov_config --enable-mrail=${enable_mrail}"
+            prov_config="$prov_config --enable-efa=${enable_efa}"
+            prov_config="$prov_config --enable-netdir=${enable_netdir}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
-            prov_config+=" --enable-direct=${ofi_direct_provider}"
+            prov_config="$prov_config --enable-direct=${ofi_direct_provider}"
             AC_MSG_NOTICE([Enabling direct embedded provider: ${ofi_direct_provider}])
         fi
 
-        ofi_subdir_args+=" $prov_config"
+        ofi_subdir_args="$ofi_subdir_args $prov_config"
 
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
         PAC_PUSH_ALL_FLAGS()
@@ -312,7 +313,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
-        PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
+        PAC_LIBS_ADD([-lfabric])
     fi
 
     # check for libfabric depedence libs

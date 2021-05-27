@@ -31,8 +31,8 @@ static int g_tbl_capacity = CONN_PLFD_TBL_INIT_SIZE;
 static sockconn_t *g_sc_tbl = NULL;
 struct pollfd *MPID_nem_tcp_plfd_tbl = NULL;
 
-sockconn_t MPID_nem_tcp_g_lstn_sc = { 0 };
-struct pollfd MPID_nem_tcp_g_lstn_plfd = { 0 };
+sockconn_t MPID_nem_tcp_g_lstn_sc;
+struct pollfd MPID_nem_tcp_g_lstn_plfd;
 
 /* We define this in order to trick the compiler into including
    information about the MPID_nem_tcp_vc_area type.  This is
@@ -440,7 +440,7 @@ static int send_id_info(const sockconn_t * const sc)
 
 /*     store ending NULL also */
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
-/*     avoid computing the length of string everytime this function is called. */
+/*     avoid computing the length of string every time this function is called. */
 
     MPL_VG_MEM_INIT(&hdr, sizeof(hdr));
 
@@ -502,7 +502,7 @@ static int send_tmpvc_info(const sockconn_t * const sc)
 
 /*     store ending NULL also */
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
-/*     avoid computing the length of string everytime this function is called. */
+/*     avoid computing the length of string every time this function is called. */
 
     MPL_VG_MEM_INIT(&hdr, sizeof(hdr));
 
@@ -936,12 +936,6 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 static int cleanup_and_free_sc_plfd(sockconn_t * const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_VC_t *const sc_vc = sc->vc;
-    MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
-    const int idx = sc->index;
-    struct pollfd *const plfd = &MPID_nem_tcp_plfd_tbl[sc->index];
-    freenode_t *node;
-    MPIR_CHKPMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
@@ -949,18 +943,26 @@ static int cleanup_and_free_sc_plfd(sockconn_t * const sc)
     if (sc == NULL)
         goto fn_exit;
 
+    MPIDI_VC_t *const sc_vc = sc->vc;
+    const int idx = sc->index;
+    struct pollfd *const plfd = &MPID_nem_tcp_plfd_tbl[sc->index];
+    freenode_t *node;
+    MPIR_CHKPMEM_DECL(1);
+
     if (sc_vc) {
+        MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
+
         MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                         (MPL_DBG_FDEST,
                          "about to decr sc_ref_count sc=%p sc->vc=%p sc_ref_count=%d", sc, sc_vc,
                          sc_vc_tcp->sc_ref_count));
         MPIR_Assert(sc_vc_tcp->sc_ref_count > 0);
         --sc_vc_tcp->sc_ref_count;
-    }
 
-    if (sc_vc && sc_vc_tcp->sc == sc) { /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
-        sc_vc_tcp->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
-        ASSIGN_SC_TO_VC(sc_vc_tcp, NULL);
+        if (sc_vc_tcp->sc == sc) { /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
+            sc_vc_tcp->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
+            ASSIGN_SC_TO_VC(sc_vc_tcp, NULL);
+        }
     }
 
     CHANGE_STATE(sc, CONN_STATE_TS_CLOSED);
@@ -1016,8 +1018,6 @@ int close_cleanup_and_free_sc_plfd(sockconn_t * const sc)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CLOSE_CLEANUP_AND_FREE_SC_PLFD);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1733,7 +1733,7 @@ int MPID_nem_tcp_sm_finalize(void)
 }
 
 /*
- N1: create a new listener fd?? While doing so, if we bind it to the same port used befor,
+ N1: create a new listener fd?? While doing so, if we bind it to the same port used before,
 then it is ok. Else,the new port number(and thus the business card) has to be communicated
 to the other processes (in same and different pg's), which is not quite simple to do.
 Evaluate the need for it by testing and then do it, if needed.
@@ -1842,7 +1842,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
 
   N3:  find_free_entry is called within the while loop. It may cause the table to expand. So,
   the arguments passed for this callback function may get invalidated. So, it is imperative
-  that we obtain sc pointer and plfd pointer everytime within the while loop.
+  that we obtain sc pointer and plfd pointer every time within the while loop.
   Accordingly, the parameters are named unused1 and unused2 for clarity.
 */
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn_t * const unused_2)
@@ -1950,9 +1950,6 @@ int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t * const vc, int req_errno)
     if (mpi_errno2)
         MPIR_ERR_ADD(mpi_errno, mpi_errno2);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CLEANUP_ON_ERROR);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

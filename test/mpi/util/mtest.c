@@ -4,15 +4,9 @@
  */
 
 #include "mpitest.h"
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
-#if defined(HAVE_STDLIB_H) || defined(STDC_HEADERS)
 #include <stdlib.h>
-#endif
-#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
 #include <string.h>
-#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
@@ -45,7 +39,6 @@ static void MTestResourceSummary(FILE *);
    memory testing */
 
 static int dbgflag = 0;         /* Flag used for debugging */
-static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
 static int returnWithVal = 1;   /* Allow programs to return with a non-zero
                                  * if there was an error (may cause problems
@@ -97,7 +90,6 @@ void MTest_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Check for debugging control */
     if (getenv("MPITEST_DEBUG")) {
         dbgflag = 1;
-        MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     }
 
     /* Check for verbose control */
@@ -178,6 +170,7 @@ void MTest_Init(int *argc, char ***argv)
 #endif
 }
 
+static void MTestCommRandomize_cleanup(void);
 /*
   Finalize MTest.  errs is the number of errors on the calling process;
   this routine will write the total number of errors over all of MPI_COMM_WORLD
@@ -206,6 +199,8 @@ void MTest_Finalize(int errs)
     if (usageOutput)
         MTestResourceSummary(stdout);
 
+    /* Clean up any comms from MTestCommRandomize() */
+    MTestCommRandomize_cleanup();
 
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
@@ -213,6 +208,7 @@ void MTest_Finalize(int errs)
     MPI_Finalize();
 
     MTest_finalize_thread_pkg();
+    MTest_finalize_gpu();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -556,7 +552,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == size / 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -585,7 +581,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == 1) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -615,7 +611,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -645,7 +641,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == size / 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -685,7 +681,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == size / 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -736,7 +732,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == (size / 2)) {
                         rleader = 1;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -777,7 +773,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == (size / 2)) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -1022,6 +1018,33 @@ void MTestFreeComm(MPI_Comm * comm)
     }
 }
 
+/* Directly calling MTestGetIntercomm maybe insufficient since all the processes
+ * may end up with the same context_id even between different groups of the intercomm.
+ * Radomize it by duplicate MPI_Comm_self different times */
+
+#define MAX_COMM_SELF_DUPS 4
+static MPI_Comm comm_self_dups[MAX_COMM_SELF_DUPS];
+static int num_self_dups = 0;
+
+void MTestCommRandomize(void)
+{
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    srand(rank);
+
+    num_self_dups = rand() % MAX_COMM_SELF_DUPS;
+    for (int i = 0; i < num_self_dups; i++) {
+        MPI_Comm_dup(MPI_COMM_SELF, &comm_self_dups[i]);
+    }
+}
+
+static void MTestCommRandomize_cleanup(void)
+{
+    for (int i = 0; i < num_self_dups; i++) {
+        MPI_Comm_free(&comm_self_dups[i]);
+    }
+}
+
 /* ------------------------------------------------------------------------ */
 void MTestPrintError(int errcode)
 {
@@ -1053,11 +1076,10 @@ void MTestPrintErrorMsg(const char msg[], int errcode)
 void MTestPrintfMsg(int level, const char format[], ...)
 {
     va_list list;
-    int n;
 
     if (verbose && level <= verbose) {
         va_start(list, format);
-        n = vprintf(format, list);
+        vprintf(format, list);
         va_end(list);
         fflush(stdout);
     }

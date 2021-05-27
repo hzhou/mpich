@@ -84,7 +84,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
         MPI_UNSIGNED_LONG_LONG,
         nem_fbox_fall_back_to_queue_count, /* name */
         MPID_nem_fbox_fall_back_to_queue_count, /* address */
-        n_local_ranks, /* count, known at pvar registeration time */
+        n_local_ranks, /* count, known at pvar registration time */
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
         MPIR_T_PVAR_FLAG_CONTINUOUS, /* flags */
@@ -93,10 +93,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
         "NEMESIS", /* category */
         "Array counting how many times nemesis had to fall back to the regular queue when sending messages between pairs of local processes");
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 int
@@ -139,7 +136,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(MPL_atomic_ptr_t));
 
     /* Make sure payload is aligned on 8-byte boundary */
-    MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.payload[0], 8));
+    MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->payload[0], 8));
     /* Make sure the padding to cacheline size in MPID_nem_queue_t works */
     MPIR_Assert(MPID_NEM_CACHE_LINE_LEN > 2 * sizeof(MPID_nem_cell_rel_ptr_t));
 
@@ -314,7 +311,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Register detroy hooks after netmod init so the netmod hooks get called
+    /* Register destroy hooks after netmod init so the netmod hooks get called
        before nemesis hooks. */
     mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(MPIDI_CH3I_comm_destroy, NULL);
     MPIR_ERR_CHECK(mpi_errno);
@@ -371,8 +368,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	{
 	    MPID_nem_mem_region.mailboxes.in [i] = (void *) ((char *) fastboxes_p + (MAILBOX_INDEX(i, local_rank)) * MPID_NEM_FBOX_LEN);
 	    MPID_nem_mem_region.mailboxes.out[i] = (void *) ((char *) fastboxes_p + (MAILBOX_INDEX(local_rank, i)) * MPID_NEM_FBOX_LEN);
-	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
-	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->flag, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->flag, 0);
 	}
     }
 #undef MAILBOX_INDEX
@@ -481,8 +478,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     {
         MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
         
-	vc_ch->fbox_out = &MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich;
-	vc_ch->fbox_in = &MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich;
+	vc_ch->fbox_out = MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]];
+	vc_ch->fbox_in = MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]];
 	vc_ch->recv_queue = MPID_nem_mem_region.RecvQ[vc->lpid];
 
         /* override nocontig send function */

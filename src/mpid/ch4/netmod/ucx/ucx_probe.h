@@ -23,8 +23,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     ucp_tag_message_h message_h;
     MPIR_Request *req = NULL;
 
-    /* int vni_src = MPIDI_UCX_get_vni_src(comm, comm->rank, tag); */
-    int vni_dst = MPIDI_UCX_get_vni_dst(comm, comm->rank, tag);
+    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
@@ -34,9 +33,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     if (message_h) {
         *flag = 1;
-        req = (MPIR_Request *) MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst);
+        req = (MPIR_Request *) MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst, 2);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).message_handler = message_h;
 
         if (status != MPI_STATUS_IGNORE) {
@@ -71,8 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     ucp_tag_recv_info_t info;
     ucp_tag_message_h message_h;
 
-    /* int vni_src = MPIDI_UCX_get_vni_src(comm, comm->rank, tag); */
-    int vni_dst = MPIDI_UCX_get_vni_dst(comm, comm->rank, tag);
+    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);

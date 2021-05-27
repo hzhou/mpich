@@ -23,7 +23,7 @@ AC_INIT([mpich-testsuite],
         [mpich-testsuite],
         [http://www.mpich.org/])
 
-AC_CONFIG_HEADER(include/mpitestconf.h)
+AC_CONFIG_HEADERS([include/mpitestconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory
@@ -93,7 +93,7 @@ if test "X$main_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
 fi
 
 AC_ARG_ENABLE(echo,
-	[AC_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
+	[AS_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
 	[set -x])
 
 AC_ARG_ENABLE(fortran,
@@ -142,7 +142,7 @@ IFS="$save_IFS"
 
 # DTPools switch
 AC_ARG_ENABLE([dtpools],
-              [AC_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
+              [AS_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
               [enable_dtpools=yes])
 
 if test "x${enable_dtpools}" = "xyes"; then
@@ -154,74 +154,74 @@ fi
 AC_SUBST(DTP_SWITCH)
 
 AC_ARG_ENABLE(cxx,
-	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
+	[AS_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
 AC_ARG_ENABLE(romio,
-	[AC_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation])],,
+	[AS_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation])],,
 	[enable_romio=yes])
 
 AC_ARG_ENABLE(spawn,
-	[AC_HELP_STRING([--enable-spawn],
+	[AS_HELP_STRING([--enable-spawn],
 		[Enable tests of the dynamic process parts of MPI-2 (default)])],,
 	[enable_spawn=yes])
 
 AC_ARG_ENABLE(rma,
-	[AC_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
+	[AS_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
 	[enable_rma=yes])
 
 AC_ARG_ENABLE(long-double-complex,
-	[AC_HELP_STRING([--enable-long-double-complex],
+	[AS_HELP_STRING([--enable-long-double-complex],
 		[Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)])],,
 	[enable_long_double_complex=yes])
 AC_ARG_ENABLE(long-double,
-	[AC_HELP_STRING([--enable-long-double-complex],
+	[AS_HELP_STRING([--enable-long-double-complex],
 		[Enable tests involving MPI_LONG_DOUBLE and related types (default)])],,
 	[enable_long_double=yes])
 
 AC_ARG_ENABLE(checkerrors,
-	[AC_HELP_STRING([--enable-checkerrors],
+	[AS_HELP_STRING([--enable-checkerrors],
 		[Add some tests for checking for errors in user programs])],,
 	[enable_checkerrors=yes])
 
 AC_ARG_ENABLE(perftest,
-	[AC_HELP_STRING([--enable-perftest],
+	[AS_HELP_STRING([--enable-perftest],
 		[Include tests for basic performance consistency (default)])],,
 	[enable_perftest=yes])
 
 AC_ARG_ENABLE(large-tests,
-	[AC_HELP_STRING([--enable-large-tests],
+	[AS_HELP_STRING([--enable-large-tests],
 		[Enable tests which require large (>2GB per proc) amount of memory])],,
 	[enable_large_tests=no])
 
 AC_ARG_ENABLE(ft-tests,
-	[AC_HELP_STRING([--enable-ft-tests],
+	[AS_HELP_STRING([--enable-ft-tests],
 		[Include tests for fault tolerance (default no)])],,
 	[enable_ft_tests=no])
 
 AC_ARG_ENABLE(comm-overlap-tests,
-	[AC_HELP_STRING([--enable-comm-overlap-tests],
+	[AS_HELP_STRING([--enable-comm-overlap-tests],
 		[Include tests for communicator overlap (default)])],,
 	[enable_comm_overlap_tests=yes])
 
 AC_ARG_ENABLE(checkfaults,
-	[AC_HELP_STRING([--enable-checkfaults],
+	[AS_HELP_STRING([--enable-checkfaults],
 		[Add some tests for checking on handling of faults in user programs])],,
 	[enable_checkfaults=no])
 
 AC_ARG_ENABLE(checkpointing,
-	[AC_HELP_STRING([--enable-checkpointing],
+	[AS_HELP_STRING([--enable-checkpointing],
 		[Add some tests for checkpointing])],,
 	[enable_checkpointing=no])
 
 AC_ARG_ENABLE(fast,
-	[AC_HELP_STRING([--enable-fast],
+	[AS_HELP_STRING([--enable-fast],
 		[Indicates that the MPI implementation may have been
 		built for fastest operation, such as building without
 		error checking.  Has the effect of
 		--enable-checkerrors=no])],,)
 
 AC_ARG_ENABLE(strictmpi,
-	[AC_HELP_STRING([--enable-strictmpi],
+	[AS_HELP_STRING([--enable-strictmpi],
 		[Only test for operations specifically defined by the
 		MPI standard.  This turns off tests for some common
 		extensions, including for combinations of predefined
@@ -246,18 +246,18 @@ AC_ARG_ENABLE(threads,
 	[enable_threads=default])
 
 AC_ARG_ENABLE(xfail,
-	[AC_HELP_STRING([--enable-xfail],
+	[AS_HELP_STRING([--enable-xfail],
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
 AC_ARG_ENABLE(gpu-tests-only,
-        [AC_HELP_STRING([--enable-gpu-tests-only],
+        [AS_HELP_STRING([--enable-gpu-tests-only],
                 [Run only GPU tests])],,
         [enable_gpu_tests_only=no])
 
 # DTPools test generation
 AC_ARG_WITH(dtpools-datatypes,
-    [AC_HELP_STRING([--with-dtpools-datatypes=typelist],
+    [AS_HELP_STRING([--with-dtpools-datatypes=typelist],
         [Comma separated list of MPI datatypes to use for DTPools tests
          generation. Typelist can be of the form: 'MPI_INT,MPI_DOUBLE,...',
          for single element types, 'MPI_INT:4+MPI_DOUBLE:8,...', for multiple
@@ -271,12 +271,12 @@ AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_arg
 AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
 
 AC_ARG_WITH(mpi,
-	[AC_HELP_STRING([--with-mpi=dir],
+	[AS_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
 		mpifort and mpicxx should be in dir/bin])],,)
 
 AC_ARG_WITH(pm,
-	AC_HELP_STRING([--with-pm=name],
+	AS_HELP_STRING([--with-pm=name],
 		[Specify the process manager for MPICH.  "no" or "none" are
                  valid values.  Multiple process managers may be specified as
                  long as they all use the same pmi interface by separating them
@@ -320,7 +320,7 @@ else
 fi
 
 AC_ARG_WITH(config-args,
-	[AC_HELP_STRING([--with-config-args=filename],
+	[AS_HELP_STRING([--with-config-args=filename],
 		[Specify configure argument file that contains the
 		values of variables that configure reads,
 		e.g. CC,CFLAGS,F77,FFLAGS,FC,FCFLAGS....  If the
@@ -640,7 +640,7 @@ AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
-# Note that some versions of autoconf will insist that the compiler 
+# Note that some versions of autoconf will insist that the compiler
 # produce executables at this point, which is why we must do something
 # special for building within MPICH
 
@@ -700,13 +700,25 @@ AC_PROG_RANLIB
 AM_PROG_AR
 
 # Check for --enable-strict
+# NOTE: do this before checking any AC_CHECK_HEADERS, because strict may
+# turn on extension macros
 PAC_ARG_STRICT
 
 # General headers
-AC_HEADER_STDC
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
 AC_CHECK_HEADERS(stdarg.h sys/time.h sys/resource.h)
+
+# check if we need declarations
+AC_CHECK_FUNCS(strdup)
+if test "$ac_cv_func_strdup" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
+fi
+
+AC_CHECK_FUNCS(usleep)
+if test "$ac_cv_func_usleep" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <unistd.h>],usleep)
+fi
 
 # Check for fixed width types
 AC_TYPE_INT8_T
@@ -721,6 +733,73 @@ AC_TYPE_UINT64_T
 # Check for availability of C99 types
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
 AC_CHECK_SIZEOF(void *,8)
+
+# Start of GPU libs check
+have_gpu="no"
+PAC_PUSH_FLAG([CPPFLAGS])
+PAC_PUSH_FLAG([LDFLAGS])
+PAC_PUSH_FLAG([LIBS])
+
+# Check CUDA availability
+PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
+cuda_CPPFLAGS=""
+cuda_LDFLAGS=""
+cuda_LIBS=""
+if test "X${pac_have_cuda}" = "Xyes" ; then
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    have_gpu="yes"
+    if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
+        cuda_CPPFLAGS="-I${with_cuda}/include"
+        if test -d ${with_cuda}/lib64 ; then
+            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
+        else
+            cuda_LDFLAGS="-L${with_cuda}/lib"
+        fi
+    fi
+    cuda_LIBS="-lcudart"
+fi
+AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
+AC_SUBST([cuda_CPPFLAGS])
+AC_SUBST([cuda_LDFLAGS])
+AC_SUBST([cuda_LIBS])
+
+if test "$have_gpu" = "no" ; then
+    # Check Level Zero availability when no other GPU library is available
+    PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
+    ze_CPPFLAGS=""
+    ze_LDFLAGS=""
+    ze_LIBS=""
+    if test "X${pac_have_ze}" = "Xyes" ; then
+        AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+        have_gpu="yes"
+        if test -n "${with_ze}" -a "$with_ze" != "no" ; then
+            ze_CPPFLAGS="-I${with_ze}/include"
+            if test -d ${with_ze}/lib64 ; then
+                ze_LDFLAGS="-L${with_ze}/lib64 -L${with_ze}/lib"
+            else
+                ze_LDFLAGS="-L${with_ze}/lib"
+            fi
+        fi
+        ze_LIBS="-lze_loader"
+    fi
+    AC_SUBST([ze_CPPFLAGS])
+    AC_SUBST([ze_LDFLAGS])
+    AC_SUBST([ze_LIBS])
+fi
+AM_CONDITIONAL([HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
+
+PAC_POP_FLAG([CPPFLAGS])
+PAC_POP_FLAG([LDFLAGS])
+PAC_POP_FLAG([LIBS])
+
+AM_CONDITIONAL([HAVE_GPU], [test $have_gpu = "yes"])
+# GPU only tests
+if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
+    AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
+fi
+AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
+# End of GPU libs Check
+
 # for tests that require large mem
 largetest="#"
 if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
@@ -974,7 +1053,7 @@ dnl EOF
 dnl             # FIXME.  Check for BASECC
 dnl             # Note: This assumes that CC has been set to the C compiler for
 dnl             # MPI Programs, and that either any necessary include paths are 
-dnl             # already set or they are in CPPFLAGS (prefered) or CFLAGS.
+dnl             # already set or they are in CPPFLAGS (preferred) or CFLAGS.
 dnl             if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
 dnl                 if ./conftest$ac_exeext ; then
 dnl                     #success
@@ -982,14 +1061,14 @@ dnl                     ac_cv_sizeof_MPI_Offset=`cat conftestval`
 dnl                 else
 dnl                     # failure
 dnl                     AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
-dnl                     echo "configure: failed program was:" >&AC_FD_CC
-dnl                     cat conftest.c >&AC_FD_CC
+dnl                     echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+dnl                     cat conftest.c >&AS_MESSAGE_LOG_FD
 dnl                 fi
 dnl             else
 dnl                 # failure
 dnl                 AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
-dnl                 echo "configure: failed program was:" >&AC_FD_CC
-dnl                 cat conftest.c >&AC_FD_CC
+dnl                 echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+dnl                 cat conftest.c >&AS_MESSAGE_LOG_FD
 dnl             fi
 dnl             rm -f conftest*
 dnl         ])
@@ -1505,7 +1584,7 @@ AC_MSG_RESULT($POINTERINT)
 AC_DEFINE_UNQUOTED(POINTERINT_t,$POINTERINT,[POINTERINT_t is a pointer-sized integer])
 
 # Find perl; used to create some of the tests from template and 
-# defintion files
+# definition files
 AC_PATH_PROG(PERL,perl)
 AC_SUBST(PERL)
 AC_SUBST(otherlangs)
@@ -1575,51 +1654,18 @@ else
     AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
 fi
 
-# GPU support
-PAC_PUSH_FLAG([CPPFLAGS])
-PAC_PUSH_FLAG([LDFLAGS])
-PAC_PUSH_FLAG([LIBS])
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
-cuda_CPPFLAGS=""
-cuda_LDFLAGS=""
-cuda_LIBS=""
-if test "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
-    if test -n "${with_cuda}" ; then
-        cuda_CPPFLAGS="-I${with_cuda}/include"
-        if test -d ${with_cuda}/lib64 ; then
-            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
-        else
-            cuda_LDFLAGS="-L${with_cuda}/lib"
-        fi
-        cuda_LIBS="-lcudart"
-    fi
-fi
-AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
-AC_SUBST([cuda_CPPFLAGS])
-AC_SUBST([cuda_LDFLAGS])
-AC_SUBST([cuda_LIBS])
-PAC_POP_FLAG([CPPFLAGS])
-PAC_POP_FLAG([LDFLAGS])
-PAC_POP_FLAG([LIBS])
-
-# GPU only tests
-if test $have_cuda = "no" -a $enable_gpu_tests_only = "yes" ; then
-    AC_MSG_ERROR([GPU only test configuration requires CUDA])
-fi
-AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
-
 # TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
 AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])
 AM_CONDITIONAL([HAS_F90], [test $f90dir = f90])
 AM_CONDITIONAL([HAS_F08], [test $f08dir = f08])
 AM_CONDITIONAL([HAS_CXX], [test $cxxdir = cxx])
 
-AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
-AC_OUTPUT_COMMANDS([chmod a+x runtests checktests])
-AC_OUTPUT_COMMANDS([chmod a+x manual/manyconnect])
-AC_OUTPUT_COMMANDS([chmod a+x impls/hydra/proc_binding.sh])
+AC_CONFIG_COMMANDS([chmod],[
+    chmod a+x maint/testmerge
+    chmod a+x runtests checktests
+    chmod a+x manual/manyconnect
+    chmod a+x impls/hydra/proc_binding.sh
+])
 dnl Note that this format for AC_OUTPUT can cause problems for autoconf
 dnl run under cygwin
 AC_OUTPUT(maint/testmerge \
@@ -1642,6 +1688,7 @@ AC_OUTPUT(maint/testmerge \
           init/Makefile \
           pt2pt/Makefile \
           pt2pt/testlist \
+          part/Makefile  \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
@@ -1742,6 +1789,7 @@ AC_OUTPUT(maint/testmerge \
           threads/coll/Makefile \
           threads/coll/testlist \
           threads/perf/Makefile \
+          threads/part/Makefile  \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \
