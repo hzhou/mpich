@@ -19,6 +19,11 @@
 
 #include "mtest_dtp.h"
 
+int errs = 0;
+int rank, size;
+mtest_mem_type_e memtype;
+int count;
+
 struct int_test {
     int a;
     int b;
@@ -40,20 +45,20 @@ struct double_test {
     int b;
 };
 
-#define mpi_op2str(op)                          \
-    ((op == MPI_SUM) ? "MPI_SUM" :              \
-     (op == MPI_PROD) ? "MPI_PROD" :            \
-     (op == MPI_MAX) ? "MPI_MAX" :              \
-     (op == MPI_MIN) ? "MPI_MIN" :              \
-     (op == MPI_LOR) ? "MPI_LOR" :              \
-     (op == MPI_LXOR) ? "MPI_LXOR" :            \
-     (op == MPI_LAND) ? "MPI_LAND" :            \
-     (op == MPI_BOR) ? "MPI_BOR" :              \
-     (op == MPI_BAND) ? "MPI_BAND" :            \
-     (op == MPI_BXOR) ? "MPI_BXOR" :            \
-     (op == MPI_MAXLOC) ? "MPI_MAXLOC" :        \
-     (op == MPI_MINLOC) ? "MPI_MINLOC" :        \
-     "MPI_NO_OP")
+const char *mpi_op2str(MPI_Op op)
+{
+    return ((op == MPI_SUM) ? "MPI_SUM" :
+            (op == MPI_PROD) ? "MPI_PROD" :
+            (op == MPI_MAX) ? "MPI_MAX" :
+            (op == MPI_MIN) ? "MPI_MIN" :
+            (op == MPI_LOR) ? "MPI_LOR" :
+            (op == MPI_LXOR) ? "MPI_LXOR" :
+            (op == MPI_LAND) ? "MPI_LAND" :
+            (op == MPI_BOR) ? "MPI_BOR" :
+            (op == MPI_BAND) ? "MPI_BAND" :
+            (op == MPI_BXOR) ? "MPI_BXOR" :
+            (op == MPI_MAXLOC) ? "MPI_MAXLOC" : (op == MPI_MINLOC) ? "MPI_MINLOC" : "MPI_NO_OP");
+}
 
 /* calloc to avoid spurious valgrind warnings when "type" has padding bytes */
 #define DECL_MALLOC_IN_OUT_SOL(type)            \
@@ -261,6 +266,7 @@ struct double_test {
     }
 
 #define maxloc_test(type, mpi_type)                                     \
+    static void maxloc_test_ ## mpi_type() \
     {                                                                   \
         DECL_MALLOC_IN_OUT_SOL(type);                                   \
         SET_INDEX_STRUCT_SUM(in, rank, a);                              \
@@ -272,7 +278,14 @@ struct double_test {
         STRUCT_ALLREDUCE_AND_FREE(type, mpi_type, MPI_MAXLOC, in, out, sol);  \
     }
 
+maxloc_test(struct int_test, MPI_2INT);
+maxloc_test(struct long_test, MPI_LONG_INT);
+maxloc_test(struct short_test, MPI_SHORT_INT);
+maxloc_test(struct float_test, MPI_FLOAT_INT);
+maxloc_test(struct double_test, MPI_DOUBLE_INT);
+
 #define minloc_test(type, mpi_type)                                     \
+    static void minloc_test_ ## mpi_type() \
     {                                                                   \
         DECL_MALLOC_IN_OUT_SOL(type);                                   \
         SET_INDEX_STRUCT_SUM(in, rank, a);                              \
@@ -283,6 +296,12 @@ struct double_test {
         SET_INDEX_STRUCT_CONST(out, -1, b);                             \
         STRUCT_ALLREDUCE_AND_FREE(type, mpi_type, MPI_MINLOC, in, out, sol);  \
     }
+
+minloc_test(struct int_test, MPI_2INT);
+minloc_test(struct long_test, MPI_LONG_INT);
+minloc_test(struct short_test, MPI_SHORT_INT);
+minloc_test(struct float_test, MPI_FLOAT_INT);
+minloc_test(struct double_test, MPI_DOUBLE_INT);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
 #define test_types_set_mpi_2_2_integer(op,post) do {    \
@@ -379,28 +398,173 @@ struct double_test {
 #define test_types_set5(op, post) do { } while (0)
 #endif
 
-static int test_allred(int count, mtest_mem_type_e evenmem, mtest_mem_type_e oddmem)
+static void test_types_set2_sum_1()
 {
-    int errs = 0;
-    int size, rank;
-    mtest_mem_type_e memtype;
+    test_types_set2(sum, 1);
+}
 
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+static void test_types_set2_prod_1()
+{
+    test_types_set2(prod, 1);
+}
 
-    if (size < 2) {
-        fprintf(stderr, "At least 2 processes required\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
+static void test_types_set2_max_1()
+{
+    test_types_set2(max, 1);
+}
 
+static void test_types_set2_min_1()
+{
+    test_types_set2(min, 1);
+}
+
+static void test_types_set1_lor_1()
+{
+    test_types_set1(lor, 1);
+}
+
+static void test_types_set1_lor_2()
+{
+    test_types_set1(lor, 2);
+}
+
+static void test_types_set1_lxor_1()
+{
+    test_types_set1(lxor, 1);
+}
+
+static void test_types_set1_lxor_2()
+{
+    test_types_set1(lxor, 2);
+}
+
+static void test_types_set1_lxor_3()
+{
+    test_types_set1(lxor, 3);
+}
+
+static void test_types_set1_land_1()
+{
+    test_types_set1(land, 1);
+}
+
+static void test_types_set1_land_2()
+{
+    test_types_set1(land, 2);
+}
+
+static void test_types_set1_bor_1()
+{
+    test_types_set1(bor, 1);
+}
+
+static void test_types_set1_band_1()
+{
+    test_types_set1(band, 1);
+}
+
+static void test_types_set1_band_2()
+{
+    test_types_set1(band, 2);
+}
+
+static void test_types_set1_bxor_1()
+{
+    test_types_set1(bxor, 1);
+}
+
+static void test_types_set1_bxor_2()
+{
+    test_types_set1(bxor, 2);
+}
+
+static void test_types_set1_bxor_3()
+{
+    test_types_set1(bxor, 3);
+}
+
+static void test_types_set3_bor_1()
+{
+    test_types_set3(bor, 1);
+}
+
+static void test_types_set3_band_1()
+{
+    test_types_set3(band, 1);
+}
+
+static void test_types_set3_band_2()
+{
+    test_types_set3(band, 2);
+}
+
+static void test_types_set3_bxor_1()
+{
+    test_types_set3(bxor, 1);
+}
+
+static void test_types_set3_bxor_2()
+{
+    test_types_set3(bxor, 2);
+}
+
+static void test_types_set3_bxor_3()
+{
+    test_types_set3(bxor, 3);
+}
+
+static void test_types_set4_sum_1()
+{
+    test_types_set4(sum, 1);
+}
+
+static void test_types_set4_prod_1()
+{
+    test_types_set4(prod, 1);
+}
+
+static void test_types_set5_lor_1()
+{
+    test_types_set5(lor, 1);
+}
+
+static void test_types_set5_lor_2()
+{
+    test_types_set5(lor, 2);
+}
+
+static void test_types_set5_lxor_1()
+{
+    test_types_set5(lxor, 1);
+}
+
+static void test_types_set5_lxor_2()
+{
+    test_types_set5(lxor, 2);
+}
+
+static void test_types_set5_lxor_3()
+{
+    test_types_set5(lxor, 3);
+}
+
+static void test_types_set5_land_1()
+{
+    test_types_set5(land, 1);
+}
+
+static void test_types_set5_land_2()
+{
+    test_types_set5(land, 2);
+}
+
+static void test_allred(mtest_mem_type_e evenmem, mtest_mem_type_e oddmem)
+{
     /* Set errors return so that we can provide better information
      * should a routine reject one of the operand/datatype pairs */
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    if (count <= 0) {
-        fprintf(stderr, "Invalid count argument %d\n", count);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
+    assert(count > 0);
 
     if (rank == 0) {
         MTestPrintfMsg(1, "./allred -evenmemtype=%s -oddmemtype=%s\n",
@@ -412,74 +576,80 @@ static int test_allred(int count, mtest_mem_type_e evenmem, mtest_mem_type_e odd
     else
         memtype = oddmem;
 
-    test_types_set2(sum, 1);
-    test_types_set2(prod, 1);
-    test_types_set2(max, 1);
-    test_types_set2(min, 1);
+    test_types_set2_sum_1();
+    test_types_set2_prod_1();
+    test_types_set2_max_1();
+    test_types_set2_min_1();
 
-    test_types_set1(lor, 1);
-    test_types_set1(lor, 2);
+    test_types_set1_lor_1();
+    test_types_set1_lor_2();
 
-    test_types_set1(lxor, 1);
-    test_types_set1(lxor, 2);
-    test_types_set1(lxor, 3);
+    test_types_set1_lxor_1();
+    test_types_set1_lxor_2();
+    test_types_set1_lxor_3();
 
-    test_types_set1(land, 1);
-    test_types_set1(land, 2);
+    test_types_set1_land_1();
+    test_types_set1_land_2();
 
-    test_types_set1(bor, 1);
-    test_types_set1(band, 1);
-    test_types_set1(band, 2);
+    test_types_set1_bor_1();
+    test_types_set1_band_1();
+    test_types_set1_band_2();
 
-    test_types_set1(bxor, 1);
-    test_types_set1(bxor, 2);
-    test_types_set1(bxor, 3);
+    test_types_set1_bxor_1();
+    test_types_set1_bxor_2();
+    test_types_set1_bxor_3();
 
-    test_types_set3(bor, 1);
-    test_types_set3(band, 1);
-    test_types_set3(band, 2);
+    test_types_set3_bor_1();
+    test_types_set3_band_1();
+    test_types_set3_band_2();
 
-    test_types_set3(bxor, 1);
-    test_types_set3(bxor, 2);
-    test_types_set3(bxor, 3);
+    test_types_set3_bxor_1();
+    test_types_set3_bxor_2();
+    test_types_set3_bxor_3();
 
-    test_types_set4(sum, 1);
-    test_types_set4(prod, 1);
+    test_types_set4_sum_1();
+    test_types_set4_prod_1();
 
-    test_types_set5(lor, 1);
-    test_types_set5(lor, 2);
-    test_types_set5(lxor, 1);
-    test_types_set5(lxor, 2);
-    test_types_set5(lxor, 3);
-    test_types_set5(land, 1);
-    test_types_set5(land, 2);
+    test_types_set5_lor_1();
+    test_types_set5_lor_2();
+    test_types_set5_lxor_1();
+    test_types_set5_lxor_2();
+    test_types_set5_lxor_3();
+    test_types_set5_land_1();
+    test_types_set5_land_2();
 
-    maxloc_test(struct int_test, MPI_2INT);
-    maxloc_test(struct long_test, MPI_LONG_INT);
-    maxloc_test(struct short_test, MPI_SHORT_INT);
-    maxloc_test(struct float_test, MPI_FLOAT_INT);
-    maxloc_test(struct double_test, MPI_DOUBLE_INT);
+    maxloc_test_MPI_2INT();
+    maxloc_test_MPI_LONG_INT();
+    maxloc_test_MPI_SHORT_INT();
+    maxloc_test_MPI_FLOAT_INT();
+    maxloc_test_MPI_DOUBLE_INT();
 
-    minloc_test(struct int_test, MPI_2INT);
-    minloc_test(struct long_test, MPI_LONG_INT);
-    minloc_test(struct short_test, MPI_SHORT_INT);
-    minloc_test(struct float_test, MPI_FLOAT_INT);
-    minloc_test(struct double_test, MPI_DOUBLE_INT);
+    minloc_test_MPI_2INT();
+    minloc_test_MPI_LONG_INT();
+    minloc_test_MPI_SHORT_INT();
+    minloc_test_MPI_FLOAT_INT();
+    minloc_test_MPI_DOUBLE_INT();
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
-    return errs;
 }
 
 int main(int argc, char **argv)
 {
-    int errs = 0;
-
     MTest_Init(&argc, &argv);
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (size < 2) {
+        fprintf(stderr, "At least 2 processes required\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_COLL_COUNT, argc, argv);
     while (dtp_args_get_next(&dtp_args)) {
-        errs += test_allred(dtp_args.count, dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
+        count = dtp_args.count;
+        test_allred(dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
     }
     dtp_args_finalize(&dtp_args);
 

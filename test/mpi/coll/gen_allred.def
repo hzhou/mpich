@@ -1,0 +1,410 @@
+page: gen_allred
+    module: perl
+
+    my @out
+    gen_header(\@out)
+
+    $foreach $type in @type_set_all
+        gen_fn_allred_type(\@out, $type)
+
+    my $num_ops = @op_list
+    $for $i=0:$num_ops
+        gen_fn_test_op(\@out, $op_list[$i], $op_num_tests[$i])
+    gen_main(\@out)
+
+    &call open_W, t_allred.c
+        $foreach $l in @out
+            $print $l
+
+subcode: _autoload
+    $global @op_list = ($(op_list:quotelist))
+    $global @op_num_tests = qw(1 1 1 1 2 3 2 1 3 2 1 1)
+    $(for:1-6)
+        $global @type_set$1 = ($(type_set$1:quotelist))
+    $global @type_set_all = (@type_set1, @type_set2, @type_set3, @type_set4, @type_set5, @type_set6)
+
+macros_test:
+    op_list: sum
+    type_set1: INT
+    type_set2:
+    type_set3:
+    type_set4:
+    type_set5:
+    type_set6:
+
+macros:
+    op_list: sum, prod, max, min, lor, lxor, land, bor, bxor, band, maxloc, minloc
+    type_set1:: INT, LONG, SHORT, UNSIGNED_SHORT, UNSIGNED, UNSIGNED_LONG, UNSIGNED_CHAR
+    type_set1:: INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, MPI_AINT, MPI_OFFSET
+    type_set1:: MPI_COUNT
+    type_set2: FLOAT, DOUBLE
+    type_set3: BYTE
+    type_set4: C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, C_LONG_DOUBLE_COMPLEX
+    type_set5: C_BOOL
+    type_set6: 2INT, LONG_INT, SHORT_INT, FLOAT_INT, DOUBLE_INT
+
+fncode: get_c_type($T)
+    $if $T=~/(MPI_\w)(\w+)/
+        return $1.lc($2)
+    $elif $T=~/UNSIGNED_(\w+)/
+        return "unsigned ".lc($1)
+    $elif $T=~/C_(\w+)_COMPLEX/
+        my $t = lc($1)
+        $t=~s/_/ /g
+        return "$t _Complex"
+    $elif $T eq "C_BOOL"
+        return "_Bool"
+    $elif $T eq "BYTE"
+        return "unsigned char"
+    $elif $T eq "2INT"
+        return "struct int_test"
+    $elif $T eq "LONG_INT"
+        return "struct long_test"
+    $elif $T eq "SHORT_INT"
+        return "struct short_test"
+    $elif $T eq "FLOAT_INT"
+        return "struct float_test"
+    $elif $T eq "DOUBLE_INT"
+        return "struct double_test"
+    $else
+        return lc($T)
+
+fncode: get_mpi_type($T)
+    $if $T=~/^MPI_/
+        return $T
+    $else
+        return "MPI_$T"
+
+fncode: get_mpi_op($op)
+    return "MPI_".uc($op)
+
+#----------------------------------------
+fncode: gen_fn_test_op($out, $op, $n)
+    my @type_list
+    $if $op =~ /^(sum|prod)/
+        push @type_list, @type_set1, @type_set2, @type_set4
+    $elif $op =~ /^(max|min)$/
+        push @type_list, @type_set1, @type_set2
+    $elif $op =~ /^(max|min)loc$/
+        push @type_list, @type_set6
+    $elif $op =~ /^l(or|xor|and)$/
+        push @type_list, @type_set1, @type_set5
+    $elif $op =~ /^b(or|xor|and)$/
+        push @type_list, @type_set1, @type_set3
+
+    $for $type in @type_list
+        $for $i=0:$n
+            gen_fn_type_op_type($out, $op, $type, $i+1)
+
+    push @$out, "static void test_$op()"
+    push @$out, "{"
+    $for $type in @type_list
+        $for $i=0:$n
+            my $fn_name = "test_".$op."_$type"."_".($i+1)
+            push @$out, "    $fn_name();"
+    push @$out, "}"
+
+fncode: gen_fn_type_op_type($out, $op, $type, $idx)
+    my $c_type = get_c_type($type)
+    my $mpi_type = get_mpi_type($type)
+    my $mpi_op = get_mpi_op($op)
+    my $fn_name = "test_".$op."_$type"."_$idx"
+
+    push @$out, "static void $fn_name()"
+    push @$out, "{"
+    push @$out, "    $c_type *in, *out, *sol;"
+    push @$out, "    in = ($c_type *) calloc(count, sizeof($c_type));"
+    push @$out, "    out = ($c_type *) calloc(count, sizeof($c_type));"
+    push @$out, "    sol = ($c_type *) calloc(count, sizeof($c_type));"
+
+    setup_in_sol_out($out, $op, $idx)
+
+    push @$out, "    allred_check_$type(in, out, sol, $mpi_op);"
+    push @$out, "    free(in); free(out); free(sol);"
+
+    push @$out, "}"
+
+fncode: setup_in_sol_out($out, $op, $idx)
+    $(for:op in sum,prod,max,min,lor,lxor,land,bor,bxor,band,maxloc,minloc)
+        $case $op eq "$(op)"
+            $(for:i in 1-3)
+                $(if:hascode:set_$(op)_$(i))
+                    $if $idx == $(i)
+                        $call set_$(op)_$(i)
+
+    subcode: set_sum_1
+        set_index_sum($out, "in", "0");
+        set_index_factor($out, "sol", "size");
+        set_index_const($out, "out", "0");
+    subcode: set_prod_1
+        set_index_sum($out, "in", "0");
+        set_index_power($out, "sol", "size");
+        set_index_const($out, "out", "0");
+    subcode: set_max_1
+        set_index_sum($out, "in", "rank");
+        set_index_sum($out, "sol", "size - 1");
+        set_index_const($out, "out", "0");
+    subcode: set_min_1
+        set_index_sum($out, "in", "rank");
+        set_index_sum($out, "sol", "0");
+        set_index_const($out, "out", "0");
+    subcode: set_const(a, b, c)
+        set_index_const($out, "in", $(a));
+        set_index_const($out, "sol", $(b));
+        set_index_const($out, "out", $(c));
+
+    subcode: set_lor_1
+        $call set_const, "(rank & 0x1)", "(size > 1)", "0"
+
+    subcode: set_lor_2
+        $call set_const, "0", "0", "0"
+
+    subcode: set_lxor_1
+        $call set_const, "(rank == 1)", "(size > 1)", "0"
+
+    subcode: set_lxor_2
+        $call set_const, "0", "0", "0"
+
+    subcode: set_lxor_3
+        $call set_const, "1", "(size & 0x1)", "0"
+
+    subcode: set_land_1
+        $call set_const, "(rank & 0x1)", "0", "0"
+
+    subcode: set_land_2
+        $call set_const, "1", "1", "0"
+
+    subcode: set_bor_1
+        $call set_const, "(rank & 0x3)", "((size < 3) ? size - 1 : 0x3)", "0"
+
+    subcode: set_bxor_1
+        $call set_const, "(rank == 1) * 0xf0", "(size > 1) * 0xf0", "0"
+
+    subcode: set_bxor_2
+        $call set_const, "0", "0", "0"
+
+    subcode: set_bxor_3
+        $call set_const, "~0", "((size & 0x1) ? ~0 : 0)", "0"
+
+    subcode: set_band_1
+        push @$out, "    if (rank == size - 1) {"
+        set_index_sum($out, "in", "0")
+        push @$out, "    } else {"
+        set_index_const($out, "in", "~0")
+        push @$out, "    }"
+        set_index_sum($out, "sol", "0");
+        set_index_const($out, "out", "0");
+
+    subcode: set_band_2
+        push @$out, "    if (rank == size - 1) {"
+        set_index_sum($out, "in", "0")
+        push @$out, "    } else {"
+        set_index_const($out, "in", "0")
+        push @$out, "    }"
+        set_index_const($out, "sol", "0");
+        set_index_const($out, "out", "0");
+
+    subcode: set_maxloc_1
+        set_index_pair($out, "in", "sum", "rank", "const", "rank")
+        set_index_pair($out, "sol", "sum", "size - 1", "const", "size - 1")
+        set_index_pair($out, "out", "const", "0", "const", "-1")
+
+    subcode: set_minloc_1
+        set_index_pair($out, "in", "sum", "rank", "const", "rank")
+        set_index_pair($out, "sol", "sum", "0", "const", "0")
+        set_index_pair($out, "out", "const", "0", "const", "-1")
+
+#----------------------------------------
+fncode: set_index_const($out, $arr, $val)
+    push @$out, "    for (int i = 0; i < count; i++) {"
+    push @$out, "        $arr\[i] = $val;"
+    push @$out, "    }"
+
+fncode: set_index_sum($out, $arr, $val)
+    push @$out, "    for (int i = 0; i < count; i++) {"
+    push @$out, "        $arr\[i] = i + $val;"
+    push @$out, "    }"
+
+fncode: set_index_factor($out, $arr, $val)
+    push @$out, "    for (int i = 0; i < count; i++) {"
+    push @$out, "        $arr\[i] = i * $val;"
+    push @$out, "    }"
+
+fncode: set_index_power($out, $arr, $val)
+    push @$out, "    for (int i = 0; i < count; i++) {"
+    push @$out, "        $arr\[i] = 1;"
+    push @$out, "        for (int j = 0; j < $val; j++) {"
+    push @$out, "            $arr\[i] *= i;"
+    push @$out, "        }"
+    push @$out, "    }"
+
+fncode: set_index_pair($out, $arr, $set_a, $val_a, $set_b, $val_b)
+    push @$out, "    for (int i = 0; i < count; i++) {"
+    $(for:a, b)
+        $if $set_$1 eq "const"
+            push @$out, "        $arr\[i].$1 = $val_$1;"
+        $elif $set_$1 eq "sum"
+            push @$out, "        $arr\[i].$1 = i + $val_$1;"
+    push @$out, "    }"
+
+#----------------------------------------
+fncode: gen_header($out)
+    &call here_doc, HEADER
+        $call gen_header_template
+
+template: gen_header_template
+    \x2f*
+    \x20* Copyright (C) by Argonne National Laboratory
+    \x20*     See COPYRIGHT in top-level directory
+    \x20*/
+
+    \x2f*      Warning - this test will fail for MPI_PROD & maybe MPI_SUM
+    \x20*        if more than 10 MPI processes are used.  Loss of precision
+    \x20*        will occur as the number of processors is increased.
+    \x20*/
+
+    #include "mpi.h"
+    #include "mpitest.h"
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #ifdef HAVE_STDINT_H
+    #include <stdint.h>
+    #endif
+
+    int count, size, rank;
+    int errs;
+
+    struct int_test {
+        int a;
+        int b;
+    };
+    struct long_test {
+        long a;
+        int b;
+    };
+    struct short_test {
+        short a;
+        int b;
+    };
+    struct float_test {
+        float a;
+        int b;
+    };
+    struct double_test {
+        double a;
+        int b;
+    };
+
+    const char *mpi_op2str(MPI_Op op)
+    {
+        return ((op == MPI_SUM) ? "MPI_SUM" :
+            (op == MPI_PROD) ? "MPI_PROD" :
+            (op == MPI_MAX) ? "MPI_MAX" :
+            (op == MPI_MIN) ? "MPI_MIN" :
+            (op == MPI_LOR) ? "MPI_LOR" :
+            (op == MPI_LXOR) ? "MPI_LXOR" :
+            (op == MPI_LAND) ? "MPI_LAND" :
+            (op == MPI_BOR) ? "MPI_BOR" :
+            (op == MPI_BAND) ? "MPI_BAND" :
+            (op == MPI_BXOR) ? "MPI_BXOR" :
+            (op == MPI_MAXLOC) ? "MPI_MAXLOC" :
+            (op == MPI_MINLOC) ? "MPI_MINLOC" :
+            "MPI_NO_OP");
+    }
+
+#----------------------------------------
+fncode: gen_fn_allred_type($out, $type)
+    my $c_type = get_c_type($type)
+    my $mpi_type = get_mpi_type($type)
+
+    my $cond
+    $if $c_type =~ /^struct/
+        $cond = "out[i].a != sol[i].a || out[i].b != sol[i].b"
+    $else
+        $cond = "out[i] != sol[i]"
+
+    &call here_doc, ALLRED
+        $call allred_template
+
+template: allred_template
+    static void allred_check_$type(void *t_in, void *t_out, void *t_sol, MPI_Op op)
+    {
+        $c_type *in = t_in;
+        $c_type *out = t_out;
+        $c_type *sol = t_sol;
+        int lerrcnt = 0;
+
+        int rc = MPI_Allreduce(in, out, count, $mpi_type, op, MPI_COMM_WORLD);
+        if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }
+        else {
+            for (int i = 0; i < count; i++) {
+                if ($cond) {
+                    lerrcnt++;
+                    errs++;
+                }
+            }
+        }
+
+        if (lerrcnt) {
+            char name[MPI_MAX_OBJECT_NAME] = {0};
+            int len = 0;
+            MPI_Type_get_name($mpi_type, name, &len);
+            fprintf(stderr, "(%d) Error for type %s and op %s\\n", rank, name, mpi_op2str(op));
+        }
+    }
+
+#---------------------------------------
+fncode: gen_main($out)
+    &call here_doc, MAIN_A
+        $call gen_main_template_a
+
+    $foreach $op in @op_list
+        push @$out, "    test_$op();"
+
+    &call here_doc, MAIN_B
+        $call gen_main_template_b
+
+template: gen_main_template_a
+    int main(int argc, char **argv)
+    {
+        MTest_Init(&argc, &argv);
+
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+        if (size < 2) {
+            fprintf(stderr, "At least 2 processes required\\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        \x2f* Set errors return so that we can provide better information
+        \x20* should a routine reject one of the operand/datatype pairs */
+        MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
+        count = 10;
+        \x2f* Allow an argument to override the count.
+        \x20* Note that the product tests may fail if the count is very large.
+        \x20*/
+        if (argc >= 2) {
+            count = atoi(argv[1]);
+            if (count <= 0) {
+                fprintf(stderr, "Invalid count argument %s\\n", argv[1]);
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            }
+        }
+
+template: gen_main_template_b
+    NOOP
+        MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+        MTest_Finalize(errs);
+        return MTestReturnValue(errs);
+    }
+
+#----------------------------------------
+subcode: here_doc(name)
+    push @$out, <<"END $(name)"
+    $:: PUSHDENT
+    BLOCK
+    $:: END $(name)
+    $:: POPDENT
