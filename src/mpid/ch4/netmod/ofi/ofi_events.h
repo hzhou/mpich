@@ -63,6 +63,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
+    printf("OFI_recv_event: thread_id = %d, count = %ld bytes\n", MPIR_thread_id(), count);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_cancelled;
     MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
