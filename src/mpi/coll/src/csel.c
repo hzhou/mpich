@@ -905,7 +905,7 @@ static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_info)
     return msgsize;
 }
 
-static inline int get_count(MPIR_Csel_coll_sig_s coll_info)
+static inline int csel_get_count(MPIR_Csel_coll_sig_s coll_info)
 {
     int count = 0, i = 0;
     int comm_size = coll_info.comm_ptr->local_size;
@@ -1275,14 +1275,14 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LE:
-                if (get_count(coll_info) <= node->u.count_le.val)
+                if (csel_get_count(coll_info) <= node->u.count_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
-                if (get_count(coll_info) < coll_info.comm_ptr->coll.pof2)
+                if (csel_get_count(coll_info) < coll_info.comm_ptr->coll.pof2)
                     node = node->success;
                 else
                     node = node->failure;

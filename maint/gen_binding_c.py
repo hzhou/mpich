@@ -32,8 +32,9 @@ def main():
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
     # -- Generating code --
+    do_single_source = True
+    G.out = []
     for func in func_list:
-        G.out = []
         G.err_codes = {}
 
         # dumps the code to G.out array
@@ -45,11 +46,17 @@ def main():
         else:
             dump_mpi_c(func, False)
 
-        file_path = get_func_file_path(func, c_dir)
+        if not do_single_source:
+            file_path = get_func_file_path(func, c_dir)
+            dump_c_file(file_path, G.out)
+            # add to mpi_sources for dump_Makefile_mk()
+            G.mpi_sources.append(file_path)
+            G.out = []
+    if do_single_source:
+        file_path = c_dir + "/binding.c"
         dump_c_file(file_path, G.out)
-
-        # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
+        G.out = []
 
     dump_Makefile_mk("%s/Makefile.mk" % c_dir)
     dump_mpir_impl_h("src/include/mpir_impl.h")

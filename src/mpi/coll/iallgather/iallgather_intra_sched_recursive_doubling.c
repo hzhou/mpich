@@ -6,15 +6,15 @@
 #include "mpiimpl.h"
 
 /* helper callbacks and associated state structures */
-struct shared_state {
+struct allgather_shared_state {
     int recvtype;
     MPI_Aint curr_count;
     MPI_Aint last_recv_count;
     MPI_Status status;
 };
-static int get_count(MPIR_Comm * comm, int tag, void *state)
+static int allgather_get_count(MPIR_Comm * comm, int tag, void *state)
 {
-    struct shared_state *ss = state;
+    struct allgather_shared_state *ss = state;
     MPI_Aint recv_count;
     MPIR_Get_count_impl(&ss->status, ss->recvtype, &recv_count);
     ss->last_recv_count = recv_count;
@@ -47,7 +47,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct shared_state *ss = NULL;
+    struct allgather_shared_state *ss = NULL;
     int comm_size, rank;
     int i, j, k;
     int mask, tmp_mask, dst;
@@ -82,8 +82,9 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
         MPIR_SCHED_BARRIER(s);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno,
-                              "ss", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct allgather_shared_state *,
+                              sizeof(struct allgather_shared_state), mpi_errno, "ss",
+                              MPL_MEM_BUFFER);
     ss->curr_count = recvcount;
     ss->recvtype = recvtype;
     /* ensure that recvtype doesn't disappear immediately after last _recv but before _cb */
@@ -121,7 +122,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
-            mpi_errno = MPIR_Sched_cb(&get_count, ss, s);
+            mpi_errno = MPIR_Sched_cb(&allgather_get_count, ss, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
@@ -192,7 +193,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
                                                          (my_tree_root + mask)) * recvcount),
                                                        recvtype, dst, comm_ptr, &ss->status, s);
                     MPIR_SCHED_BARRIER(s);
-                    mpi_errno = MPIR_Sched_cb(&get_count, ss, s);
+                    mpi_errno = MPIR_Sched_cb(&allgather_get_count, ss, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }

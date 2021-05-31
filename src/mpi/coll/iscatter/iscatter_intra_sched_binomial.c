@@ -6,23 +6,23 @@
 #include "mpiimpl.h"
 
 /* helper callbacks and associated state structures */
-struct shared_state {
+struct scatter_shared_state {
     int sendcount;
     MPI_Aint curr_count;
     MPI_Aint send_subtree_count;
     int nbytes;
     MPI_Status status;
 };
-static int get_count(MPIR_Comm * comm, int tag, void *state)
+static int scatter_get_count(MPIR_Comm * comm, int tag, void *state)
 {
-    struct shared_state *ss = state;
+    struct scatter_shared_state *ss = state;
     MPIR_Get_count_impl(&ss->status, MPI_BYTE, &ss->curr_count);
     return MPI_SUCCESS;
 }
 
 static int calc_send_count_root(MPIR_Comm * comm, int tag, void *state, void *state2)
 {
-    struct shared_state *ss = state;
+    struct scatter_shared_state *ss = state;
     int mask = (int) (size_t) state2;
     ss->send_subtree_count = ss->curr_count - ss->sendcount * mask;
     return MPI_SUCCESS;
@@ -30,7 +30,7 @@ static int calc_send_count_root(MPIR_Comm * comm, int tag, void *state, void *st
 
 static int calc_send_count_non_root(MPIR_Comm * comm, int tag, void *state, void *state2)
 {
-    struct shared_state *ss = state;
+    struct scatter_shared_state *ss = state;
     int mask = (int) (size_t) state2;
     ss->send_subtree_count = ss->curr_count - ss->nbytes * mask;
     return MPI_SUCCESS;
@@ -38,7 +38,7 @@ static int calc_send_count_non_root(MPIR_Comm * comm, int tag, void *state, void
 
 static int calc_curr_count(MPIR_Comm * comm, int tag, void *state)
 {
-    struct shared_state *ss = state;
+    struct scatter_shared_state *ss = state;
     ss->curr_count -= ss->send_subtree_count;
     return MPI_SUCCESS;
 }
@@ -75,7 +75,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     int mask, recvtype_size = 0, src, dst;
     int tmp_buf_size = 0;
     void *tmp_buf = NULL;
-    struct shared_state *ss = NULL;
+    struct scatter_shared_state *ss = NULL;
     MPIR_SCHED_CHKPMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
@@ -84,8 +84,9 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     if (((rank == root) && (sendcount == 0)) || ((rank != root) && (recvcount == 0)))
         goto fn_exit;
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno,
-                              "shared_state", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct scatter_shared_state *,
+                              sizeof(struct scatter_shared_state), mpi_errno,
+                              "scatter_shared_state", MPL_MEM_BUFFER);
     ss->sendcount = sendcount;
 
     if (rank == root)
@@ -172,7 +173,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                                            &ss->status, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
-                mpi_errno = MPIR_Sched_cb(&get_count, ss, s);
+                mpi_errno = MPIR_Sched_cb(&scatter_get_count, ss, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
