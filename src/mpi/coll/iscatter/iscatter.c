@@ -69,17 +69,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* helper callbacks and associated state structures */
-struct shared_state {
-    int sendcount;
-    int curr_count;
-    MPI_Aint send_subtree_count;
-    int nbytes;
-    MPI_Status status;
-};
-
-/* any non-MPI functions go here, especially non-static ones */
-
 int MPIR_Iscatter_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                      int root, MPIR_Comm * comm_ptr, bool is_persistent,
