@@ -121,6 +121,7 @@ struct MPIDU_Sched {
     size_t idx;                 /* index into entries array of first yet-outstanding entry */
     int num_entries;            /* number of populated entries, num_entries <= size */
     int tag;
+    int mpi_errno;
     struct MPIR_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
     enum MPIR_Sched_kind kind;  /* regular, persistent, generalized */
