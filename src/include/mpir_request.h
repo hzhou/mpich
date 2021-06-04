@@ -201,7 +201,7 @@ struct MPIR_Request {
             struct MPIR_Grequest_fns *greq_fns;
         } ureq;                 /* kind : MPIR_REQUEST_KIND__GREQUEST */
         struct {
-            MPIR_Errflag_t errflag;
+            int mpi_errno;
             MPII_Coll_req_t coll;
         } nbc;                  /* kind : MPIR_REQUEST_KIND__COLL */
 #if defined HAVE_DEBUGGER_SUPPORT
@@ -422,7 +422,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
                 MPII_REQUEST_CLEAR_DBG(req);
                 break;
             case MPIR_REQUEST_KIND__COLL:
-                req->u.nbc.errflag = MPIR_ERR_NONE;
+                req->u.nbc.mpi_errno = MPI_SUCCESS;
                 req->u.nbc.coll.host_sendbuf = NULL;
                 req->u.nbc.coll.host_recvbuf = NULL;
                 req->u.nbc.coll.datatype = MPI_DATATYPE_NULL;

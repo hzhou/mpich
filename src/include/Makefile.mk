@@ -29,7 +29,6 @@ noinst_HEADERS +=                   \
     src/include/mpir_refcount_single.h \
     src/include/mpir_refcount.h     \
     src/include/mpir_assert.h       \
-    src/include/mpir_misc_post.h    \
     src/include/mpir_type_defs.h    \
     src/include/mpir_dbg.h          \
     src/include/mpir_attr_generic.h \

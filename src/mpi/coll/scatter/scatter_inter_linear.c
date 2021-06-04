@@ -46,8 +46,7 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
         }
     } else {
         mpi_errno =
-            MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG, comm_ptr, &status,
-                      errflag);
+            MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG, comm_ptr, &status);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =

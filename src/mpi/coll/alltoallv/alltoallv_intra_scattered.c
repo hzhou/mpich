@@ -109,7 +109,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
             }
         }
 
-        mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray, errflag);
+        mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
             MPIR_ERR_POP(mpi_errno);
 

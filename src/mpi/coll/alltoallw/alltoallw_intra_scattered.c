@@ -95,7 +95,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
             }
         }
 
-        mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray, errflag);
+        mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
             MPIR_ERR_POP(mpi_errno);
 

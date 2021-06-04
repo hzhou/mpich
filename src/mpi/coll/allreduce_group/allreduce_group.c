@@ -85,8 +85,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
             newrank = -1;
         } else {        /* odd */
             to_comm_rank(csrc, group_rank - 1);
-            mpi_errno = MPIC_Recv(tmp_buf, count,
-                                  datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
+            mpi_errno = MPIC_Recv(tmp_buf, count, datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =
@@ -312,8 +311,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
             mpi_errno = MPIC_Send(recvbuf, count, datatype, cdst, tag, comm_ptr, errflag);
         } else {        /* even */
             to_comm_rank(csrc, group_rank + 1);
-            mpi_errno = MPIC_Recv(recvbuf, count,
-                                  datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
+            mpi_errno = MPIC_Recv(recvbuf, count, datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE);
         }
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

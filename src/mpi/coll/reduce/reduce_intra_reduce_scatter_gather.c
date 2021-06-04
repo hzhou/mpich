@@ -125,8 +125,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
             newrank = -1;
         } else {        /* even */
             mpi_errno = MPIC_Recv(tmp_buf, count,
-                                  datatype, rank + 1,
-                                  MPIR_REDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  datatype, rank + 1, MPIR_REDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =
@@ -259,7 +258,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                     disps[i] = disps[i - 1] + cnts[i - 1];
 
                 mpi_errno = MPIC_Recv(recvbuf, cnts[0], datatype,
-                                      0, MPIR_REDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                      0, MPIR_REDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =
@@ -362,7 +361,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                 mpi_errno = MPIC_Recv((char *) recvbuf +
                                       disps[recv_idx] * extent,
                                       recv_cnt, datatype, dst,
-                                      MPIR_REDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                      MPIR_REDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =

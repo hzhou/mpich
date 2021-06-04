@@ -214,7 +214,6 @@ typedef struct MPIR_Session MPIR_Session;
 #include "mpir_typerep.h"
 #include "mpir_datatype.h"
 #include "mpir_cvars.h"
-#include "mpir_misc_post.h"
 #include "mpit.h"
 #include "mpir_handlemem.h"
 #include "mpir_hwtopo.h"

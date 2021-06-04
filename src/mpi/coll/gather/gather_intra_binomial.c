@@ -142,8 +142,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                                                (((rank +
                                                   mask) % comm_size) * (MPI_Aint) recvcount *
                                                 extent)), (MPI_Aint) recvblks * recvcount,
-                                              recvtype, src, MPIR_GATHER_TAG, comm_ptr, &status,
-                                              errflag);
+                                              recvtype, src, MPIR_GATHER_TAG, comm_ptr, &status);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag =
@@ -157,8 +156,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                         /* small transfer size case. cast ok */
                         MPIR_Assert(recvblks * nbytes == (int) (recvblks * nbytes));
                         mpi_errno = MPIC_Recv(tmp_buf, (int) (recvblks * nbytes),
-                                              MPI_BYTE, src, MPIR_GATHER_TAG,
-                                              comm_ptr, &status, errflag);
+                                              MPI_BYTE, src, MPIR_GATHER_TAG, comm_ptr, &status);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag =
@@ -183,7 +181,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                         MPIR_ERR_CHECK(mpi_errno);
 
                         mpi_errno = MPIC_Recv(recvbuf, 1, tmp_type, src,
-                                              MPIR_GATHER_TAG, comm_ptr, &status, errflag);
+                                              MPIR_GATHER_TAG, comm_ptr, &status);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag =
@@ -212,7 +210,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                         offset = (mask - 1) * nbytes;
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
                                           recvblks * nbytes, MPI_BYTE, src,
-                                          MPIR_GATHER_TAG, comm_ptr, &status, errflag);
+                                          MPIR_GATHER_TAG, comm_ptr, &status);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag =

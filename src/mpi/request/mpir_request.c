@@ -45,7 +45,7 @@ void MPII_init_request(void)
         init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, (MPIR_Request_kind_t) i);
     }
     MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtins[MPIR_REQUEST_KIND__SEND]);
-    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.mpi_errno = MPI_SUCCESS;
     MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_sendbuf = NULL;
     MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_recvbuf = NULL;
     MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.datatype = MPI_DATATYPE_NULL;
@@ -55,6 +55,19 @@ void MPII_init_request(void)
     init_builtin_request(req, MPIR_REQUEST_NULL_RECV, MPIR_REQUEST_KIND__RECV);
     MPIR_Status_set_procnull(&req->status);
 }
+
+#define GET_ERR_FROM_STATUS(errno, status) \
+    do { \
+        errno = status.MPI_ERROR; \
+        if (!errno && MPIR_TAG_CHECK_ERROR_BIT(status.MPI_TAG)) { \
+            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status.MPI_TAG)) { \
+                errno = MPIR_ERR_PROC_FAILED; \
+            } else { \
+                errno = MPIR_ERR_OTHER; \
+            } \
+            MPIR_TAG_CLEAR_ERROR_BITS(status.MPI_TAG); \
+        } \
+    } while (0)
 
 /* Complete a request, saving the status data if necessary.
    If debugger information is being provided for pending (user-initiated)
@@ -94,6 +107,11 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 break;
             }
         case MPIR_REQUEST_KIND__RECV:
+            {
+                MPIR_Request_extract_status(request_ptr, status);
+                GET_ERR_FROM_STATUS(mpi_errno, request_ptr->status);
+                break;
+            }
         case MPIR_REQUEST_KIND__RMA:
             {
                 MPIR_Request_extract_status(request_ptr, status);
@@ -155,7 +173,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     request_ptr->u.persist.real_request = NULL;
 
                     MPIR_Request_extract_status(prequest_ptr, status);
-                    mpi_errno = prequest_ptr->status.MPI_ERROR;
+                    GET_ERR_FROM_STATUS(mpi_errno, prequest_ptr->status);
 
                     MPIR_Request_free(prequest_ptr);
                 } else {
@@ -261,14 +279,15 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
-        case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__COLL:
         case MPIR_REQUEST_KIND__RMA:
             {
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 break;
             }
-
+        case MPIR_REQUEST_KIND__RECV:
+            GET_ERR_FROM_STATUS(mpi_errno, request_ptr->status);
+            break;
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
                 if (request_ptr->u.persist.real_request != NULL) {

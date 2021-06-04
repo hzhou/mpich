@@ -53,7 +53,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             } else if (0 == comm_ptr->node_comm->rank) {
                 mpi_errno =
                     MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
-                              MPIR_BCAST_TAG, comm_ptr->node_comm, status_p, errflag);
+                              MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =

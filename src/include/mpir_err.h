@@ -147,6 +147,16 @@ void MPIR_Handle_fatal_error(struct MPIR_Comm *comm_ptr, const char fcname[], in
 #define MPIR_ERR_CLASS_SIZE 128
 #define MPIR_ERR_GET_CLASS(mpi_errno_) (mpi_errno_ & MPIR_ERR_CLASS_MASK)
 
+MPL_STATIC_INLINE_PREFIX MPIR_Errflag_t MPIR_Err_get_errflag(int mpi_errno)
+{
+    if (mpi_errno == MPI_SUCCESS) {
+        return MPIR_ERR_NONE;
+    } else if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIX_ERR_PROC_FAILED) {
+        return MPIR_ERR_PROC_FAILED;
+    } else {
+        return MPIR_ERR_OTHER;
+    }
+}
 
 /* ------------------------------------------------------------------------- */
 /* mpir_err.h */

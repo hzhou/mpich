@@ -93,10 +93,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, status_p);
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, status_p);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =

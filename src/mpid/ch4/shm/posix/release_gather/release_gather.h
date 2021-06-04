@@ -114,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 MPI_Aint recv_bytes;
                 mpi_errno =
                     MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
-                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =
@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE, errflag);
+                              MPI_STATUS_IGNORE);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =
@@ -383,7 +383,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             if (rank == root) {
                 mpi_errno =
                     MPIC_Recv(outbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE, errflag);
+                              MPI_STATUS_IGNORE);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =

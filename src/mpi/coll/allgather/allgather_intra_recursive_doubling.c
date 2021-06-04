@@ -166,8 +166,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                          (rank >= tree_root + nprocs_completed)) {
                     mpi_errno = MPIC_Recv(((char *) recvbuf + offset),
                                           (comm_size - (my_tree_root + mask)) * recvcount,
-                                          recvtype, dst,
-                                          MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
+                                          recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, &status);
                     /* nprocs_completed is also equal to the
                      * no. of processes whose data we don't have */
                     if (mpi_errno) {
