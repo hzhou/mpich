@@ -7,6 +7,7 @@ from local_python import MPI_API_Global as G
 from local_python.mpi_api import *
 from local_python.binding_c import *
 from local_python import RE
+from local_python.info_hints import collect_info_hint_blocks
 import glob
 import os
 
@@ -30,6 +31,8 @@ def main():
         func = G.FUNCS[a.lower()]
         mapping = G.MAPS['SMALL_C_KIND_MAP']
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
+
+    G.hints = collect_info_hint_blocks("src")
 
     # -- Generating code --
     for func in func_list:
