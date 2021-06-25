@@ -229,10 +229,9 @@ is easier to use an example to explain what is active message and how it
 works.
 
 MPID_Send will call either `MPIDI_SHM_mpi_isend` or `MPIDI_NM_mpi_isend` based
-on locality, which may call back to `MPIDIG_mpi_isend`. `MPIDIG_mpi_isend`
-will pack (assuming small message send eagerly) the message along with am
-header and send to target process using `MPIDI_{SHM,NM}_am_isend`. It creates
-an MPIR_Request object and return to user.
+on locality, which may call back to `MPIDIG_mpi_isend`. `MPIDIG_mpi_isend` will
+send the message along with am header to target process using
+`MPIDI_{SHM,NM}_am_isend`. It creates an MPIR_Request object and return to user.
 
 During progress, the receiving process receives the message (inside shm
 progress or netmod progress), it will check the am header, and call a
@@ -242,10 +241,9 @@ it will check posted receiver buffer list and either copy the message data to
 the receiver buffer (and completes the receive request) or enqueuing the
 message to an unexpected queue.
 
-As a counter part, `MPID_Receive` will at some point call `MPIDIG_mpi_irecv`,
-which will check the unexpected queue, and either copy the data over (and
-completes the receive buffer) or enqueue the receive request to a posted
-queue.
+As a counter part, `MPID_Recv` will at some point call `MPIDIG_mpi_irecv`, which
+will check the unexpected queue, and either copy the data over (and completes
+the receive buffer) or enqueue the receive request to a posted queue.
 
 There are complications, where we may implement different protocols such as
 rendezvous protocol or IPC or RDMA, as well as various RMA operations.
