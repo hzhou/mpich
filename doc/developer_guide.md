@@ -259,6 +259,68 @@ Reference:
 * src/mpid/ch4/src/ch4r_rma.h
 * src/mpid/ch4/src/ch4r_rma_target_callbacks.h
 * src/mpid/ch4/src/ch4r_rma_origin_callbacks.h
+
+Active message APIs as of MPICH 3.4.2:
+```
+/****************** Header and Data Movement APIs ******************/
+
+/* blocking header send */
+int MPIDI_[NM|SHM]_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
+                               const void *am_hdr, MPI_Aint am_hdr_sz)
+
+/* nonblocking header + datatype send */
+int MPIDI_[NM|SHM]_am_isend(int rank, MPIR_Comm * comm, int handler_id,
+                            const void *am_hdr, MPI_Aint am_hdr_sz,
+                            const void *data, MPI_Aint count,
+                            MPI_Datatype datatype, MPIR_Request * sreq)
+
+/* nonblocking headers + datatype send */
+int MPIDI_[NM|SHM]_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
+                             struct iovec *am_hdrs, size_t iov_len,
+                             const void *data, MPI_Aint count,
+                             MPI_Datatype datatype, MPIR_Request * sreq)
+
+/* blocking header send (callback safe) */
+int MPIDI_[NM|SHM]_am_send_hdr_reply(MPIR_Comm * comm, int src_rank,
+                                     int handler_id, const void *am_hdr,
+                                     MPI_Aint am_hdr_sz)
+
+/* nonblocking header + datatype send (callback safe) */
+int MPIDI_[NM|SHM]_am_isend_reply(MPIR_Comm * comm, int src_rank, int handler_id,
+                                  const void *am_hdr, MPI_Aint am_hdr_sz,
+                                  const void *data, MPI_Aint count,
+                                  MPI_Datatype datatype, MPIR_Request * sreq)
+
+/* CTS for pt2pt messages */
+int MPIDI_[NM|SHM]_am_recv(MPIR_Request * rreq)
+
+/* largest header (in bytes) supported by the nm/shm */
+MPI_Aint MPIDI_[NM|SHM]_am_hdr_max_sz(void)
+
+/* eager size supported by transport (only used internally by nm/shm) */
+MPI_Aint MPIDI_[NM|SHM]_am_eager_limit(void)
+
+/* eager buffer size supported by transport, used to assert pipeline protocol will work(?) */
+MPI_Aint MPIDI_[NM|SHM]_am_eager_buf_limit(void)
+
+/* return true/false if pt2pt message can be sent eagerly */
+bool MPIDI_[NM|SHM]_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                   const void *data, MPI_Aint count,
+                                   MPI_Datatype datatype, MPIR_Request * sreq)
+
+/****************** Callback APIs ******************/
+
+/* target-side message callback */
+typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr,
+                                        void *data, MPI_Aint data_sz,
+                                        int is_local, int is_async, MPIR_Request ** req);
+
+/* target-side completion callback */
+typedef int (*MPIDIG_am_target_cmpl_cb) (MPIR_Request * req);
+
+/* origin-side completion callback */
+typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
+```
  
 #### SHM
 
