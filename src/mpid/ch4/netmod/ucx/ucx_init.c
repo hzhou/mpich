@@ -289,10 +289,19 @@ int MPIDI_UCX_init_world(void)
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    ucs_status_t ucx_status =
-        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
-                                  &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    ucs_status_t ucx_status;
+    ucx_status = ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
+                                           &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
+#ifdef HAVE_UCP_AM_NBX
+    ucp_am_handler_param_t param = {
+        .field_mask = UCP_AM_HANDLER_PARAM_FIELD_ID | UCP_AM_HANDLER_PARAM_FIELD_CB,
+        .id = MPIDI_UCX_AM_NBX_HANDLER_ID,
+        .cb = &MPIDI_UCX_am_nbx_handler,
+    };
+    ucx_status = ucp_worker_set_am_recv_handler(MPIDI_UCX_global.ctx[0].worker, &param);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+#endif
 
     mpi_errno = initial_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
