@@ -67,6 +67,7 @@ noinst_PROGRAMS =  \
     pingping_barrier  \
     sendrecv1 \
     sendself \
+    sendrecv_custom \
     pt2pt_large \
     precv_anysrc \
     precv_anysrc_exp
