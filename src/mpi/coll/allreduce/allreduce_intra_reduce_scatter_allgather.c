@@ -104,7 +104,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
         } else {        /* odd */
             mpi_errno = MPIC_Recv(tmp_buf, count,
                                   datatype, rank - 1,
-                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =
@@ -279,7 +279,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
         else    /* even */
             mpi_errno = MPIC_Recv(recvbuf, count,
                                   datatype, rank + 1,
-                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =

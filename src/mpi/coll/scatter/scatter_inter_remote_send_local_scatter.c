@@ -62,7 +62,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
                                 "tmp_buf", MPL_MEM_BUFFER);
 
             mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
-                                  root, MPIR_SCATTER_TAG, comm_ptr, &status, errflag);
+                                  root, MPIR_SCATTER_TAG, comm_ptr, &status);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =

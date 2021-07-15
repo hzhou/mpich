@@ -87,7 +87,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
         }
 
         /* ... then wait for them to finish: */
-        mpi_errno = MPIC_Waitall(2 * ss, reqarray, starray, errflag);
+        mpi_errno = MPIC_Waitall(2 * ss, reqarray, starray);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
             MPIR_ERR_POP(mpi_errno);
 

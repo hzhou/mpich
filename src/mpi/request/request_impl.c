@@ -5,6 +5,28 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_REQUEST_ERR_FATAL
+      category    : REQUEST
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        By default, MPI_Waitall, MPI_Testall, MPI_Waitsome, and MPI_Testsome
+        return MPI_ERR_IN_STATUS when one of the request fails. If
+        MPIR_CVAR_REQUEST_ERR_FATAL is set to true, these routines will
+        return the error code of the request immediately. The default
+        MPI_ERRS_ARE_FATAL error handler will dump a error stack in this
+        case, which maybe more convenient for debugging.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 int MPIR_Cancel_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -478,7 +500,12 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                             if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
                                 MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
                                 proc_failure = TRUE;
-                            mpi_errno = MPI_ERR_IN_STATUS;
+                            if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                                mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+                                MPIR_ERR_CHECK(mpi_errno);
+                            } else {
+                                mpi_errno = MPI_ERR_IN_STATUS;
+                            }
                         }
                     } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                         mpi_errno = MPI_ERR_IN_STATUS;
@@ -806,9 +833,14 @@ int MPIR_Testsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
         if (rc == MPI_SUCCESS) {
             request_ptrs[idx] = NULL;
         } else {
-            mpi_errno = MPI_ERR_IN_STATUS;
-            if (status_ptr != MPI_STATUS_IGNORE) {
-                status_ptr->MPI_ERROR = rc;
+            if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                mpi_errno = request_ptrs[idx]->status.MPI_ERROR;
+                MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                mpi_errno = MPI_ERR_IN_STATUS;
+                if (status_ptr != MPI_STATUS_IGNORE) {
+                    status_ptr->MPI_ERROR = rc;
+                }
             }
         }
     }
@@ -1063,8 +1095,13 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 rc = MPIR_Request_completion_processing_fastpath(&array_of_requests[i],
                                                                  request_ptrs[i]);
                 if (rc != MPI_SUCCESS) {
-                    MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
-                    goto fn_exit;
+                    if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                        mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+                        MPIR_ERR_CHECK(mpi_errno);
+                    } else {
+                        MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
+                        goto fn_exit;
+                    }
                 }
             }
             continue;
@@ -1081,8 +1118,13 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                     array_of_requests[i] = MPI_REQUEST_NULL;
                 }
                 if (rc != MPI_SUCCESS) {
-                    MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
-                    goto fn_exit;
+                    if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                        mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+                        MPIR_ERR_CHECK(mpi_errno);
+                    } else {
+                        MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
+                        goto fn_exit;
+                    }
                 }
             }
             continue;
@@ -1101,7 +1143,12 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
             if (rc == MPI_SUCCESS) {
                 array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
             } else {
-                /* req completed with an error */
+                if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                    mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+                    MPIR_ERR_CHECK(mpi_errno);
+                }
+
+                /* default error processing */
                 MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
 
                 /* set the error code for this request */
@@ -1419,9 +1466,14 @@ int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
         if (rc == MPI_SUCCESS) {
             request_ptrs[idx] = NULL;
         } else {
-            mpi_errno = MPI_ERR_IN_STATUS;
-            if (status_ptr != MPI_STATUS_IGNORE) {
-                status_ptr->MPI_ERROR = rc;
+            if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                mpi_errno = request_ptrs[idx]->status.MPI_ERROR;
+                MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                mpi_errno = MPI_ERR_IN_STATUS;
+                if (status_ptr != MPI_STATUS_IGNORE) {
+                    status_ptr->MPI_ERROR = rc;
+                }
             }
         }
     }

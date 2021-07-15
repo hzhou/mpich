@@ -96,7 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
 #ifndef HAVE_ERROR_CHECKING
         coll_ret =
             MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
-                      comm->node_comm, MPI_STATUS_IGNORE, errflag);
+                      comm->node_comm, MPI_STATUS_IGNORE);
         if (coll_ret) {
             *errflag =
                 MPIX_ERR_PROC_FAILED ==
@@ -107,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
 #else
         coll_ret =
             MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
-                      comm->node_comm, &status, errflag);
+                      comm->node_comm, &status);
         if (coll_ret) {
             *errflag =
                 MPIX_ERR_PROC_FAILED ==
@@ -400,8 +400,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
         if (comm->rank == 0) {
             MPIC_Send(recvbuf, count, datatype, root, MPIR_REDUCE_TAG, comm, errflag);
         } else if (comm->rank == root) {
-            MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm, MPI_STATUS_IGNORE,
-                      errflag);
+            MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm, MPI_STATUS_IGNORE);
         }
     }
 
@@ -892,7 +891,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     if (comm_ptr->node_roots_comm != NULL && comm_ptr->node_comm != NULL) {
         coll_ret = MPIC_Recv(localfulldata, count, datatype,
                              comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG,
-                             comm_ptr->node_comm, &status, errflag);
+                             comm_ptr->node_comm, &status);
         if (coll_ret)
             MPIR_ERR_ADD(mpi_errno, coll_ret);
     } else if (comm_ptr->node_roots_comm == NULL &&
@@ -926,7 +925,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
         if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
             coll_ret = MPIC_Recv(tempbuf, count, datatype,
                                  MPIR_Get_internode_rank(comm_ptr, rank) - 1,
-                                 MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status, errflag);
+                                 MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status);
             noneed = 0;
             if (coll_ret)
                 MPIR_ERR_ADD(mpi_errno, coll_ret);

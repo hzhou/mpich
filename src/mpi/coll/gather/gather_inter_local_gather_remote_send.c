@@ -36,7 +36,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
         /* root receives data from rank 0 on remote group */
         mpi_errno =
             MPIC_Recv(recvbuf, recvcount * remote_size, recvtype, 0, MPIR_GATHER_TAG, comm_ptr,
-                      &status, errflag);
+                      &status);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =

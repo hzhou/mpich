@@ -116,7 +116,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
              * receive data into a temporary buffer. */
             if (relative_rank % 2) {
                 mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype,
-                                      src, MPIR_SCATTER_TAG, comm_ptr, &status, errflag);
+                                      src, MPIR_SCATTER_TAG, comm_ptr, &status);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =
@@ -127,7 +127,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
                 }
             } else {
                 mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
-                                      MPIR_SCATTER_TAG, comm_ptr, &status, errflag);
+                                      MPIR_SCATTER_TAG, comm_ptr, &status);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag =

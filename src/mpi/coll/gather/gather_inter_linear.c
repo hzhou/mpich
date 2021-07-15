@@ -36,7 +36,7 @@ int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
         for (i = 0; i < remote_size; i++) {
             mpi_errno =
                 MPIC_Recv(((char *) recvbuf + recvcount * i * extent), recvcount, recvtype, i,
-                          MPIR_GATHER_TAG, comm_ptr, &status, errflag);
+                          MPIR_GATHER_TAG, comm_ptr, &status);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =

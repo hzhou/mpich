@@ -36,8 +36,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
-                              MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
+        mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, &status);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
