@@ -191,9 +191,9 @@ typedef struct {
                                  * if needed. */
     enum MPIDI_OFI_req_kind kind;
     union {
-        struct fid_mr **huge_send_mrs;
-        MPIDI_OFI_huge_recv_t *recv_elem;
-    } huge_info;
+        struct fid_mr **send_mrs;
+        void *remote_info;
+    } huge;
     union {
         struct {
             void *buf;
