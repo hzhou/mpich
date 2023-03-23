@@ -76,7 +76,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
         goto fn_exit;
     }
 
-    MPIDI_OFI_CALL(ofi_err, trecvmsg);
     MPIDI_OFI_PROGRESS_WHILE(MPL_atomic_acquire_load_int(&(MPIDI_OFI_REQUEST(rreq, util_id))) ==
                              MPIDI_OFI_PEEK_START, vni_dst);
 
