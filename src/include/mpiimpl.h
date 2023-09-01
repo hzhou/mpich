@@ -175,8 +175,12 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_topo.h"
 #include "mpir_tags.h"
 #include "mpir_pt2pt.h"
-#include "mpir_ext.h"
 #include "mpir_gpu.h"
+
+/* common utils between romio and mpich */
+#include "mpir_ext.h"
+#define ROMIO_THREAD_CS_ENTER() MPIR_Ext_cs_enter()
+#define ROMIO_THREAD_CS_EXIT()  MPIR_Ext_cs_exit()
 
 #ifdef HAVE_CXX_BINDING
 #include "mpii_cxxinterface.h"

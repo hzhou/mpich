@@ -34,6 +34,7 @@ def dump_mpi_c(func, is_large=False):
     elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
         func["_need_type_create_swap"] = True
 
+    scan_custom_error_check(func)
     process_func_parameters(func)
 
     G.mpi_declares.append(get_declare_function(func, is_large, "proto"))
@@ -494,6 +495,12 @@ def check_params_with_large_only(func):
         else:
             func['c_parameters'] = func['params_large']
 
+def scan_custom_error_check(func):
+    if 'code-error_check' in func:
+        for l in func['code-error_check']:
+            if RE.match(r'CHECK(ENUM|MASK):\s*(\w+),\s*(\w+),\s*(.+)', l):
+                func['_skip_validate'][RE.m.group(2)] = 1
+
 def process_func_parameters(func):
     """ Scan parameters and populate a few lists to facilitate generation."""
     # Note: we'll attach the lists to func at the end
@@ -638,6 +645,8 @@ def process_func_parameters(func):
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
         elif RE.match(r'(COUNT|TAG)$', kind):
             validation_list.append({'kind': RE.m.group(1), 'name': name})
+        elif RE.match(r'OFFSET$', kind):
+            validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'RANK(_NNI)?$', kind):
             if RE.match(r'mpi_intercomm_create_from_groups', func_name, re.IGNORECASE):
                 # TODO: add validation
@@ -1150,6 +1159,8 @@ def dump_function_normal(func):
         G.out.append("")
         if func['dir'] == 'mpit':
             G.out.append("MPIR_T_THREAD_CS_ENTER();")
+        elif func['dir'] == 'io':
+            G.out.append("ROMIO_THREAD_CS_ENTER();")
         else:
             G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("MPIR_FUNC_TERSE_ENTER;")
@@ -1252,7 +1263,13 @@ def dump_function_normal(func):
         G.out.append("goto fn_exit;")
         dump_if_close()
 
-    if func['_is_large'] and 'code-large_count' not in func:
+    if func['dir'] == 'io':
+        G.out.append("#ifndef HAVE_ROMIO")
+        G.out.append("MPIR_Assert(0 && \"Missing MPI-IO implementation\");")
+        G.out.append("#else")
+        dump_body_of_routine()
+        G.out.append("#endif")
+    elif func['_is_large'] and 'code-large_count' not in func:
         # BIG but internally is using MPI_Aint
         impl_args_save = copy.copy(func['_impl_arg_list'])
 
@@ -1294,6 +1311,8 @@ def dump_function_normal(func):
     if not '_skip_global_cs' in func:
         if func['dir'] == 'mpit':
             G.out.append("MPIR_T_THREAD_CS_EXIT();")
+        elif func['dir'] == 'io':
+            G.out.append("ROMIO_THREAD_CS_EXIT();")
         else:
             G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("return mpi_errno;")
@@ -1737,6 +1756,8 @@ def dump_mpi_fn_fail(func):
             G.out.append("mpi_errno = MPIR_Err_return_comm(%s_ptr, __func__, mpi_errno);" % func['_has_comm'])
         elif '_has_win' in func:
             G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
+        elif '_has_file' in func:
+            G.out.append("mpi_errno = MPIO_Err_return_file(file_ptr, __func__, mpi_errno);")
         elif RE.match(r'mpi_session_init', func['name'], re.IGNORECASE):
             G.out.append("mpi_errno = MPIR_Err_return_session_init(errhandler_ptr, __func__, mpi_errno);")
         elif '_has_session' in func:
@@ -1765,9 +1786,9 @@ def get_fn_fail_create_code(func):
             fmt = 'p'
         elif kind in fmt_codes:
             fmt = fmt_codes[kind]
-        elif mapping[kind] == "int":
+        elif mapping[kind] == "int" or mapping[kind] == "MPI_Fint":
             fmt = 'd'
-        elif mapping[kind] == "MPI_Aint":
+        elif mapping[kind] == "MPI_Aint" or mapping[kind] == "MPI_Offset":
             fmt = 'L'
         elif mapping[kind] == "MPI_Count":
             fmt = 'c'
