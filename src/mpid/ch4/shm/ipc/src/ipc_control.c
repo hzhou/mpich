@@ -57,6 +57,9 @@ int MPIDI_IPC_complete(MPIR_Request * rreq, int ipc_type)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    if (MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr)) {
+        MPIR_Datatype_free(MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr));
+    }
 
   fn_exit:
     return mpi_errno;
