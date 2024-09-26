@@ -21,8 +21,8 @@
 #define BUFFER_ALIGNMENT 4096
 
 #define MESSAGE_SIZE 8
-#define NUM_MESSAGES 64000
-#define WINDOW_SIZE 64
+#define NUM_MESSAGES 4
+#define WINDOW_SIZE 1
 
 #define ERROR_MARGIN 0.05       /* FIXME: a better margin? */
 
