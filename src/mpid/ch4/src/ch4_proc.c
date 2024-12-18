@@ -245,7 +245,8 @@ int MPIDIU_insert_dynamic_upid(MPIR_Lpid * lpid_out, const char *upid, int upid_
     MPIDIU_DYN_AV_TABLE.upids[idx] = upid;
     MPIDIU_DYN_AV_TABLE.upid_sizes[idx] = upid_len;
 
-    /* TODO: call MPIDI_NM_insert_upid to enable communication */
+    mpi_errno = MPIDI_NM_insert_upid(*lpid_out, upid, upid_len);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIU_DYN_AV_TABLE.size++;
 

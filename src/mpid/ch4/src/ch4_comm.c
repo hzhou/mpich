@@ -621,6 +621,8 @@ static int prepare_local_data(int local_size, int context_id, MPIR_Lpid * lpids,
     memcpy(s, lpids, local_size * sizeof(MPIR_Lpid));
     s += local_size * sizeof(MPIR_Lpid);
 
+    *(int *) (s) = num_worlds;
+    s += sizeof(int);
     for (int i = 0; i < num_worlds; i++) {
         strncpy(s, MPIR_Worlds[world_idx_array[i]].namespace, MPIR_NAMESPACE_MAX);
         s += MPIR_NAMESPACE_MAX;
@@ -745,7 +747,7 @@ static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid, int ta
     remote_data = MPL_malloc(remote_data_size, MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!remote_data, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = MPIDI_NM_dynamic_sendrecv(remote_lpid, tag, &local_data, local_data_size,
+    mpi_errno = MPIDI_NM_dynamic_sendrecv(remote_lpid, tag, local_data, local_data_size,
                                           remote_data, remote_data_size);
     MPIR_ERR_CHECK(mpi_errno);
 

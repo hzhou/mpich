@@ -85,6 +85,7 @@ typedef uint64_t MPIR_Lpid;
 #define MPIR_LPID_WORLD_RANK(lpid)  ((lpid) & 0xffffffff)
 #define MPIR_LPID_FROM(world_idx, world_rank) (((uint64_t)(world_idx) << 32) | (world_rank))
 #define MPIR_LPID_DYNAMIC_MASK ((MPIR_Lpid)0x1 << 63)
+#define MPIR_LPID_INVALID      0xffffffff
 
 struct MPIR_Pmap {
     int size;                   /* same as group->size, duplicate here so Pmap is logically complete */
