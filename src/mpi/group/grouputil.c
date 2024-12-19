@@ -60,9 +60,10 @@ int MPIR_Group_init(void)
     return mpi_errno;
 }
 
-void MPIR_Group_finalize(void)
+int MPIR_Group_finalize(void)
 {
     num_worlds = 0;
+    return MPI_SUCCESS;
 }
 
 int MPIR_Group_release(MPIR_Group * group_ptr)

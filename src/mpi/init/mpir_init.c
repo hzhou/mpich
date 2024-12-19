@@ -479,12 +479,13 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPL_free(MPIR_Process.memory_alloc_kinds);
     MPIR_Process.memory_alloc_kinds = NULL;
 
+    MPIR_Group_finalize();
+
     /* All memory should be freed at this point */
     MPII_finalize_memory_tracing();
 
     MPII_thread_mutex_destroy();
     MPIR_Typerep_finalize();
-    MPIR_Group_finalize();
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__UNINITIALIZED);
 
   fn_exit:
