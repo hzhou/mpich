@@ -193,8 +193,6 @@ int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
                                       int size, const MPIR_Lpid lpids[] );
 
-#define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
-
 /* ULFM support */
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm_ptr)
 {
