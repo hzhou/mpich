@@ -29,9 +29,7 @@ int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), vci, vci);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(MPIDIU_lpid_to_av(remote_lpid), vci, vci);
 
     bool done = false;
     ucp_request_param_t param = {
