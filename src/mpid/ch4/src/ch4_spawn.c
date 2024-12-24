@@ -365,7 +365,7 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
         peer_comm->rank = 0;
         peer_comm->local_group = NULL;
 
-        MPIR_Group_create_stride(1, 0, NULL, remote_lpid, 1, 1, &peer_comm->remote_group);
+        MPIR_Group_create_stride(1, 0, NULL, remote_lpid, 1, &peer_comm->remote_group);
 
       fn_fail:
         /* In case root fails, we bcast mpi_errno so other ranks will abort too */
