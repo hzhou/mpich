@@ -64,7 +64,6 @@
  */
 
 struct MPIR_Pmap {
-    int size;                   /* same as group->size, duplicate here so Pmap is logically complete */
     bool use_map;
     union {
         MPIR_Lpid *map;
@@ -131,7 +130,7 @@ int MPIR_Group_finalize(void);
 
 MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
 {
-    if (rank < 0 || rank >= group->pmap.size) {
+    if (rank < 0 || rank >= group->size) {
         return MPI_UNDEFINED;
     }
 
