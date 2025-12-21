@@ -4314,6 +4314,13 @@ case "$host_os" in
         ;;
 esac
 
+fortrandir=
+AC_SUBST(fortrandir)
+if test "$enable_fortran" = "yes" ; then
+    fortrandir="src/binding/fortran"
+    PAC_CONFIG_SUBDIR_ARGS([src/binding/fortran],[$fortran_args],[],[AC_MSG_ERROR(Fortran binding configure failed)])
+fi
+
 AC_CONFIG_COMMANDS([src/include/mpi.h],[
     if test "$enable_mpi_abi" = "yes" ; then
         cp $srcdir/src/binding/abi/mpi_abi.h src/include/mpi.h

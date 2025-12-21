@@ -172,6 +172,10 @@ set_externals() {
         # external packages that require autogen.sh to be run for each of them
         externals="src/mpl test/mpi"
 
+        if [ "yes" = "$do_fortran" ] ; then
+            externals="${externals} src/binding/fortran"
+        fi
+
         if [ "yes" = "$do_hydra" ] ; then
             externals="${externals} src/pm/hydra"
         fi
@@ -277,6 +281,9 @@ fn_copy_confdb_etc() {
 
     confdb_dirs=
     confdb_dirs="${confdb_dirs} src/mpl/confdb"
+    if test "$do_fortran" = "yes" ; then
+        confdb_dirs="${confdb_dirs} src/binding/fortran/confdb"
+    fi
     if test "$do_pmi" = "yes" ; then
         confdb_dirs="${confdb_dirs} src/pmi/confdb"
         if test "$do_quick" = "no" ; then
@@ -317,6 +324,7 @@ fn_copy_confdb_etc() {
 
     # a couple of other random files
     if [ -f maint/version.m4 ] ; then
+        cp -pPR maint/version.m4 src/binding/fortran/version.m4
         cp -pPR maint/version.m4 src/pm/hydra/version.m4
         cp -pPR maint/version.m4 src/mpi/romio/version.m4
         cp -pPR maint/version.m4 src/pmi/version.m4

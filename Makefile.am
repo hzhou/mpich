@@ -48,7 +48,7 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mplsrcdir@ @hwlocsrcdir@ @jsonsrcdir@ @yaksasrcdir@ @pmisrcdir@
+external_subdirs = @mplsrcdir@ @hwlocsrcdir@ @jsonsrcdir@ @yaksasrcdir@ @pmisrcdir@ @fortrandir@
 external_ldflags = @RPATHS@ @mpllibdir@ @yaksalibdir@
 external_libs = @WRAPPER_LIBS@
 
