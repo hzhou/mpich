@@ -123,12 +123,14 @@ fi # is not cross compiling
 
 dnl determine the ISO_C_BINDING integer types
 AC_DEFUN([PAC_PROG_FC_C_INT_TYPE],[
+    AC_MSG_CHECKING([for $2])
     AS_CASE("$1",
-        [ac_cv_sizeof_short],     [$2="c_short"],
-        [ac_cv_sizeof_int],       [$2="c_int"],
-        [ac_cv_sizeof_long],      [$2="c_long"],
-        [ac_cv_sizeof_long_long], [$2="c_long_long"],
+        [$ac_cv_sizeof_short],     [$2="c_short"],
+        [$ac_cv_sizeof_int],       [$2="c_int"],
+        [$ac_cv_sizeof_long],      [$2="c_long"],
+        [$ac_cv_sizeof_long_long], [$2="c_long_long"],
         [AC_MSG_ERROR([unable to determine C type for $2 in Fortran 2008])])
+    AC_MSG_RESULT([$$2])
 ])
 
 dnl

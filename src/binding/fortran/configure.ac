@@ -14,11 +14,62 @@ AC_CONFIG_MACRO_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects no-dist])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+# When build from MPICH, --with-mpi=mpich to build native mpich ABI, --with-mpi=abi to build MPI ABI
+# When build stand-alone, set --with-mpi to path. TODO: check for system mpi.
+AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
+            [Specify the path where MPI is installed.])],,with_mpi=mpich)
+
+mpi_h=
+if test "$with_mpi" = "mpich" ; then
+    # We expect the following vars to be set from parent configure
+    # MPI_MAX_PROCESSOR_NAME, MPI_MAX_LIBRARY_VERSION_STRING, MPI_MAX_ERROR_STRING, BSEND_OVERHEAD
+    # MPI_SIZEOF_AINT, MPI_SIZEOF_OFFSET, MPI_SIZEOF_COUNT
+    :
+elif test "$with_mpi" = "abi" ; then
+    PAC_APPEND_FLAG(-I${main_top_srcdir}/src/binding, [CPPFLAGS])
+    mpi_h="$main_top_srcdir/src/binding/mpi_abi.h"
+else
+    if ! test "$with_mpi/include/mpi.h" ; then
+        AC_MSG_ERROR([mpi.h not found in $with_mpi/include/])
+    fi
+    PAC_APPEND_FLAG(-I${with_mpi}/include, [CPPFLAGS])
+    mpi_h="$with_mpi/include/mpi.h"
+fi
+
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 AC_PROG_CC
 AM_PROG_CC_C_O
+
+# check some constants from mpi.h
+if test -n "$mpi_h" ; then
+    AC_CHECK_SIZEOF(MPI_Aint, 0, [#include "mpi.h"])
+    if test $ac_cv_sizeof_MPI_Aint -gt "0" ; then
+        MPI_SIZEOF_AINT=$ac_cv_sizeof_MPI_Aint
+    fi
+
+    AC_CHECK_SIZEOF(MPI_Offset, 0, [#include "mpi.h"])
+    if test $ac_cv_sizeof_MPI_Offset -gt "0" ; then
+        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
+    fi
+
+    AC_CHECK_SIZEOF(MPI_Count, 0, [#include "mpi.h"])
+    if test $ac_cv_sizeof_MPI_Count -gt "0" ; then
+        MPI_SIZEOF_COUNT=$ac_cv_sizeof_MPI_Count
+    fi
+fi
+
+if test -z "$MPI_SIZEOF_AINT" ; then
+    AC_MSG_ERROR([Can't determine the size of MPI_Aint])
+fi
+if test -z "$MPI_SIZEOF_OFFSET" ; then
+    AC_MSG_ERROR([Can't determine the size of MPI_Offset])
+fi
+if test -z "$MPI_SIZEOF_COUNT" ; then
+    AC_MSG_ERROR([Can't determine the size of MPI_Count])
+fi
+
 
 dnl enable_fortran is assumed to be true
 
@@ -61,13 +112,18 @@ AM_CONDITIONAL([BUILD_FC_BINDING], [test "$enable_f90" = "yes"])
 PAC_FC_2008_SUPPORT([enable_f08=yes],[enable_f08=no])
 AM_CONDITIONAL([BUILD_F08_BINDING], [test "$enable_f08" = "yes"])
 
+fortran_bindings=
+AC_SUBST([fortran_bindings])
+
+if test "$enable_f77" = "yes" ; then
+    PAC_APPEND_CSV([mpif.h], [fortran_bindings])
+fi
+
 if test "$enable_f90" = "yes" ; then
-    bindings="$bindings f90"
     PAC_APPEND_CSV([use mpi], [fortran_bindings])
 fi
 
 if test "$enable_f08" = "yes" ; then
-    bindings="$bindings f08"
     PAC_APPEND_CSV([use mpi_f08], [fortran_bindings])
     AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
 fi
@@ -140,9 +196,6 @@ if test "$enable_multi_aliases" = "yes" ; then
         fi
     fi
 fi
-
-fortran_bindings=
-AC_SUBST([fortran_bindings])
 
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90
@@ -350,10 +403,6 @@ if test "$enable_f77" = "yes" ; then
         WRAPPER_EXTRA_F77_FLAGS="$addarg"
     fi
     AC_SUBST(WRAPPER_EXTRA_F77_FLAGS)
-
-    bindings="$bindings f77"
-    PAC_APPEND_CSV([mpif.h], [fortran_bindings])
-    AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
 fi
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90
@@ -369,7 +418,6 @@ AC_CONFIG_COMMANDS([src/include/mpif.h],[if test "$enable_f77" = yes ; then
         mv mpif.h.tmp mpif_h/mpif.h
     fi
 fi],
-main_top_srcdir=$main_top_srcdir
 enable_f77=$enable_f77
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
@@ -546,8 +594,6 @@ fi
 
 AC_LANG_PUSH([C])
 AC_CHECK_SIZEOF(int)
-# for default MPI_SIZEOF_AINT
-AC_CHECK_SIZEOF(void *)
 # for matching C types for F08 ISO_C_BINDING
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(long)
@@ -570,17 +616,6 @@ fi
 PAC_F77_LOGICALS_IN_C([$MPI_FINT])
 
 # Get the INTEGER_KIND, ADDRESS_KIND and OFFSET_KIND if possible
-#
-if test -z "$MPI_SIZEOF_AINT" ; then
-    MPI_SIZEOF_AINT="$ac_cv_sizeof_void_p"
-fi
-if test -z "$MPI_SIZEOF_OFFSET" ; then
-    MPI_SIZEOF_OFFSET="8"
-fi
-if test -z "$MPI_SIZE_COUNT" ; then
-    MPI_SIZEOF_COUNT="8"
-fi
-
 # We also need to check the size of MPI_Aint vs MPI_Fint, and
 # define AINT_LARGER_THAN_FINT if aint is larger (this
 # affects code in MPI_Address)

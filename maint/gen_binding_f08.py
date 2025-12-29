@@ -14,8 +14,15 @@ def main():
     # currently support -no-real128, -fint-size, -aint-size, -count-size, -cint-size
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    f08_dir = "src/binding/fortran/use_mpi_f08"
+    if os.path.exists(G.get_srcdir_path("src/binding")):
+        binding_dir = G.get_srcdir_path("src/binding")
+        f08_dir = "src/binding/fortran/use_mpi_f08"
+    elif os.path.exists(G.get_srcdir_path("mpif_h")):
+        binding_dir = G.get_srcdir_path("maint")
+        f08_dir = "use_mpi_f08"
+    else:
+        raise Exception("Can't locate binding_dir");
+
     G.check_write_path("%s/wrappers_f/" % f08_dir)
     G.check_write_path("%s/wrappers_c/" % f08_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
@@ -155,7 +162,12 @@ def main():
     if G.is_autogen():
         # mpi_f08_compile_constants.f90.in
         G.mpih_defines = {}
-        load_mpi_h_in("src/include/mpi_mpich.h.in")
+        if 'mpi-h' in G.opts and G.opts['mpi-h']:
+            # mpi.h following the MPI ABI format
+            load_mpi_h(G.opts['mpi-h'])
+        else:
+            # mpi.h.in from mpich, contains autoconf variables
+            load_mpi_h_in("src/include/mpi_mpich.h.in")
         f = "%s/mpi_f08_compile_constants.f90.in" % f08_dir
         dump_compile_constants_f90(f)
 

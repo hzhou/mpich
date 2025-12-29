@@ -14,8 +14,14 @@ def main():
     # currently support -no-real128, -aint-is-int
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    f77_dir = "src/binding/fortran/mpif_h"
+    if os.path.exists(G.get_srcdir_path("src/binding")):
+        binding_dir = G.get_srcdir_path("src/binding")
+        f77_dir = "src/binding/fortran/mpif_h"
+    elif os.path.exists(G.get_srcdir_path("mpif_h")):
+        binding_dir = G.get_srcdir_path("maint")
+        f77_dir = "mpif_h"
+    else:
+        raise Exception("Can't locate binding_dir");
 
     func_list = load_C_func_list(binding_dir, True) # suppress noise
 
@@ -50,7 +56,12 @@ def main():
     # .in files has to be generated in the source tree
     if G.is_autogen():
         G.mpih_defines = {}
-        load_mpi_h_in("src/include/mpi_mpich.h.in")
+        if 'mpi-h' in G.opts and G.opts['mpi-h']:
+            # mpi.h following the MPI ABI format
+            load_mpi_h(G.opts['mpi-h'])
+        else:
+            # mpi.h.in from mpich, contains autoconf variables
+            load_mpi_h_in("src/include/mpi_mpich.h.in")
         f = "%s/mpif.h.in" % f77_dir
         dump_mpif_h(f)
 

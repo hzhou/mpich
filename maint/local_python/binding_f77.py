@@ -1029,6 +1029,7 @@ def dump_mpif_h(f):
         print("       SAVE /MPIFCMB5/, /MPIFCMB9/, /MPIFCMBa/", file=Out)
         print("       SAVE /MPIPRIV1/, /MPIPRIV2/, /MPIPRIVC/", file=Out)
 
+"""load_mpi_h_in - it loads mpi.h.in from the mpich package"""
 def load_mpi_h_in(f):
     def hex_to_signed_int(s):
         val = int(s, 16)
@@ -1078,6 +1079,45 @@ def load_mpi_h_in(f):
 
                 G.mpih_defines[name] = val
             elif RE.match(r'\s+(MPI_\w+)\s*=\s*(\d+)', line):
+                # enum values
+                (name, val) = RE.m.group(1, 2)
+
+                if RE.match(r'MPI_(TAG_UB|HOST|IO|WTIME_IS_GLOBAL|UNIVERSE_SIZE|LASTUSEDCODE|APPNUM|WIN_(BASE|SIZE|DISP_UNIT|CREATE_FLAVOR|MODEL))', name):
+                    # KEYVAL, Fortran value is C-value + 1
+                    val = val + 1
+
+                G.mpih_defines[name] = val
+
+"""load_mpi_h - it loads mpi.h that follows the format of upstream mpi.h
+   from https://github.com/mpi-forum/mpi-abi-stubs."""
+def load_mpi_h(f):
+    def hex_to_signed_int(s):
+        val = int(s, 16)
+        if val >= 0x80000000:
+            val = val - 0x100000000
+        return val
+
+    # load constants into G.mpih_defines
+    with open(f, "r") as In:
+        for line in In:
+            # trim trailing comments
+            line = re.sub(r'\s+\/\*.*', '', line)
+            if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
+                # direct macros
+                (name, val) = RE.m.group(1, 2)
+
+                if RE.match(r'\(+MPI_\w+\)\(?0x([0-9a-fA-F]+)', val):
+                    # handle constants
+                    val = hex_to_signed_int(RE.m.group(1))
+                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
+                    # datatype aliases
+                    val = G.mpih_defines[val]
+                elif re.match(r'^(\d+)\s*$', val):
+                    if re.match(r'MPI_MAX_', name):
+                        # Fortran string buffer limit need be 1-less
+                        val = int(val) - 1
+                G.mpih_defines[name] = val
+            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(-?\d+)', line):
                 # enum values
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val

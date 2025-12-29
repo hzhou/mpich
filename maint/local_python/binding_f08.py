@@ -1739,3 +1739,38 @@ def load_mpi_h_in(f):
                 # enum values
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val
+
+"""load_mpi_h - it loads mpi.h that follows the format of upstream mpi.h
+   from https://github.com/mpi-forum/mpi-abi-stubs."""
+def load_mpi_h(f):
+    def hex_to_signed_int(s):
+        val = int(s, 16)
+        if val >= 0x80000000:
+            val = val - 0x100000000
+        return val
+
+    # load constants into G.mpih_defines
+    with open(f, "r") as In:
+        for line in In:
+            # trim trailing comments
+            line = re.sub(r'\s+\/\*.*', '', line)
+            if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
+                # direct macros
+                (name, val) = RE.m.group(1, 2)
+                if RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
+                    # handle constants
+                    (T, V) = RE.m.group(1, 2)
+                    val = hex_to_signed_int(V)
+                    val = "%s(%d) ! 0x%s" % (T, hex_to_signed_int(V), V)
+                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
+                    # datatype aliases
+                    val = G.mpih_defines[val]
+                elif re.match(r'^(\d+)\s*$', val):
+                    if re.match(r'MPI_MAX_', name):
+                        # Fortran string buffer limit need be 1-less
+                        val = int(val) - 1
+                G.mpih_defines[name] = val
+            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(-?\d+)', line):
+                # enum values
+                (name, val) = RE.m.group(1, 2)
+                G.mpih_defines[name] = val

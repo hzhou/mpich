@@ -283,6 +283,11 @@ fn_copy_confdb_etc() {
     confdb_dirs="${confdb_dirs} src/mpl/confdb"
     if test "$do_fortran" = "yes" ; then
         confdb_dirs="${confdb_dirs} src/binding/fortran/confdb"
+        rm -rf "src/binding/fortran/maint"
+        mkdir -p "src/binding/fortran/maint"
+        cp -pPR maint/local_python src/binding/fortran/maint/
+        cp maint/gen_{f77,f90,f08}.py src/binding/fortran/maint/
+        cp src/binding/*.txt src/binding/fortran/maint/
     fi
     if test "$do_pmi" = "yes" ; then
         confdb_dirs="${confdb_dirs} src/pmi/confdb"

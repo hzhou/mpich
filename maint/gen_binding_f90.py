@@ -13,8 +13,15 @@ import os
 def main():
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    f90_dir = "src/binding/fortran/use_mpi"
+    if os.path.exists(G.get_srcdir_path("src/binding")):
+        binding_dir = G.get_srcdir_path("src/binding")
+        f90_dir = "src/binding/fortran/use_mpi"
+    elif os.path.exists(G.get_srcdir_path("mpif_h")):
+        binding_dir = G.get_srcdir_path("maint")
+        f90_dir = "use_mpi"
+    else:
+        raise Exception("Can't locate binding_dir");
+
     G.check_write_path("%s/" % f90_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
     func_list.extend(get_f77_dummy_func_list())
