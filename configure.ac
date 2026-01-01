@@ -2417,14 +2417,16 @@ fi
 
 # we install mpicxx as long as CXX is defined. In the case of enable_cxx=no,
 # it is essentially the same as mpicc with CXX compiler.
+cxxlibs=
+AC_SUBST(cxxlibs)
 if test -n "$CXX" ; then
     # determine shared library flags for CXX
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
     AC_SUBST_FILE([cxx_shlib_conf])
 
-    if test "$enable_cxx" != yes; then
-        MPICXXLIBNAME="$MPILIBNAME"
+    if test "$enable_cxx" = yes; then
+        cxxlibs="-l$MPICXXLIBNAME"
     fi
 fi
 AM_CONDITIONAL([INSTALL_MPICXX],[test -n "$CXX"])

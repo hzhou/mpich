@@ -289,17 +289,7 @@ else
     mpi_libs_static="$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@"
 fi
 
-cxxlibs=
-if [ "$mpi_abi" = no ] ; then
-    if [ "@MPICXXLIBNAME@" != "@MPILIBNAME@" ] ; then
-        cxxlibs="-l@MPICXXLIBNAME@"
-    fi
-else
-    true # TODO: Implement support for libmpicxx_abi
-    # if [ "@MPICXXABILIBNAME@" != "@MPIABILIBNAME@" ] ; then
-    #     cxxlibs="-l@MPICXXABILIBNAME@"
-    # fi
-fi
+cxxlibs="@cxxlibs@"
 
 # -----------------------------------------------------------------------
 #
