@@ -14,16 +14,7 @@ def main():
     # currently support -no-real128, -aint-is-int
     G.parse_cmdline()
 
-    if os.path.exists(G.get_srcdir_path("src/binding")):
-        binding_dir = G.get_srcdir_path("src/binding")
-        f77_dir = "src/binding/fortran/mpif_h"
-    elif os.path.exists(G.get_srcdir_path("mpif_h")):
-        binding_dir = G.get_srcdir_path("maint")
-        f77_dir = "mpif_h"
-    else:
-        raise Exception("Can't locate binding_dir");
-
-    func_list = load_C_func_list(binding_dir, True) # suppress noise
+    func_list = load_C_func_list(G.binding_dir, True) # suppress noise
 
     func_list.extend(get_f77_dummy_func_list())
 
@@ -47,23 +38,22 @@ def main():
         if has_cptr(func):
             dump_f77_c_func(func, True)
 
-    f = "%s/fortran_binding.c" % f77_dir
+    f = "%s/fortran_binding.c" % G.f77_dir
     dump_f77_c_file(f, G.out)
 
-    f = "%s/fortran_profile.h" % f77_dir
+    f = "%s/fortran_profile.h" % G.f77_dir
     dump_f77_c_file(f, G.profile_out)
 
     # .in files has to be generated in the source tree
-    if G.is_autogen():
-        G.mpih_defines = {}
-        if 'mpi-h' in G.opts and G.opts['mpi-h']:
-            # mpi.h following the MPI ABI format
-            load_mpi_h(G.opts['mpi-h'])
-        else:
-            # mpi.h.in from mpich, contains autoconf variables
-            load_mpi_h_in("src/include/mpi_mpich.h.in")
-        f = "%s/mpif.h.in" % f77_dir
-        dump_mpif_h(f)
+    G.mpih_defines = {}
+    if 'mpi-h' in G.opts and G.opts['mpi-h']:
+        # mpi.h following the MPI ABI format
+        load_mpi_h(G.opts['mpi-h'])
+    else:
+        # mpi.h.in from mpich, contains autoconf variables
+        load_mpi_h_in(G.get_srcdir_path("src/include/mpi_mpich.h.in"))
+    f = "%s/mpif.h.in" % G.f77_dir
+    dump_mpif_h(f)
 
 # ---------------------------------------------------------
 if __name__ == "__main__":

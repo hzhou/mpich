@@ -846,24 +846,51 @@ AC_SUBST(modincdir)
 # Python 3 is needed to generate Fortran bindings
 PAC_CHECK_PYTHON
 
-if test -d "$main_top_srcdir/maint" ; then
-    maintdir="$main_top_srcdir/maint"
-else
-    # TODO: duplicate maint folder
-    AC_MSG_ERROR([We do not support configure Fortran binding separate from MPICH for now.])
+# we can optionally skip python generation if the bindings are pre-generated
+skip_gen_bindings=no
+if test -z "$PYTHON" ; then
+    skip_gen_bindings=yes
+    if test "$enable_f77" = "yes" && ! test -f mpif_h/mpif.h.in ; then
+        skip_gen_bindings=no
+    fi
+    if test "$enable_f90" = "yes" && ! test -f use_mpi/mpi_base.f90 ; then
+        skip_gen_bindings=no
+    fi
+    if test "$enable_f08" = "yes" && ! test -f use_mpi_f08/mpi_f08.f90 ; then
+        skip_gen_bindings=no
+    fi
+    if test "$skip_gen_bindings" = "yes" ; then
+        AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
+    else
+        AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
+    fi
 fi
 
-# Generate some of the binding source code 
-if test "$enable_f90" = "yes" ; then
-    PAC_FC_CHECK_IGNORE_TKR
-    PAC_FC_ISO_C_BINDING
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
-            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
-        fi
+
+if test "$skip_gen_bindings" = no ; then
+    # locate the python scripts
+    if test -e "$main_top_srcdir/maint/gen_binding_f77.py" ; then
+        # when build FROM_MPICH, we don't require local copy of maint folder
+        maintdir="$main_top_srcdir/maint"
+    elif test -e "../../../maint/gen_binding_f77.py" ; then
+        maintdir="../../../maint"
+    elif test -e "maint/gen_binding_f77.py" ; then
+        maintdir="maint"
     else
+        AC_MSG_ERROR([Can't find gen_binding_f77.py])
+    fi
+
+    if test "$enable_f77" = "yes" ; then
+        cmd_f77="$PYTHON $maintdir/gen_binding_f77.py"
+        if test -n "$mpi_h" ; then
+            cmd_f77="$cmd_f77 -mpi-h=$mpi_h"
+        fi
+        AC_CONFIG_COMMANDS([gen_binding_f77], [$cmd_gen_binding_f77], [cmd_gen_binding_f77="$cmd_f77"])
+    fi
+
+    if test "$enable_f90" = "yes" ; then
+        PAC_FC_CHECK_IGNORE_TKR
+        PAC_FC_ISO_C_BINDING
         cmd_f90="$PYTHON $maintdir/gen_binding_f90.py"
         # pass in type sizes for MPI_SIZEOF
         cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
@@ -875,19 +902,14 @@ if test "$enable_f90" = "yes" ; then
         fi
         AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
     fi
-fi
 
-if test "$enable_f08" = "yes" ; then
-    PAC_FC_CHECK_REAL128
-    PAC_FC_CHECK_IGNORE_TKR_D
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
-            AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F08 bindings but not found!])
-        fi
-    else
+    if test "$enable_f08" = "yes" ; then
+        PAC_FC_CHECK_REAL128
+        PAC_FC_CHECK_IGNORE_TKR_D
         cmd_f08="$PYTHON $maintdir/gen_binding_f08.py"
+        if test -n "$mpi_h" ; then
+            cmd_f08="$cmd_f08 -mpi-h=$mpi_h"
+        fi
         if test "$pac_fc_has_real128" = "no" ; then
             cmd_f08="$cmd_f08 -no-real128"
         fi
