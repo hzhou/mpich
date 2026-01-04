@@ -6,7 +6,7 @@
 #ifndef MPI_FORTIMPL_H_INCLUDED
 #define MPI_FORTIMPL_H_INCLUDED
 
-#include "mpichconf.h"
+#include "mpifort_config.h"
 #include "mpi.h"
 #include "mpir_attr_generic.h"
 #include "mpii_f77interface.h"
@@ -400,7 +400,9 @@ typedef void (FORT_CALL F77_OpFunction) (void *, void *, MPI_Fint *, MPI_Fint *)
 /* compatible as MPI_{Comm,Win,File,Session}_errhandler_function */
 typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
 
-void MPII_Keyval_set_f90_proxy(int keyval);
+int MPII_Keyval_create(MPI_Copy_function copy_fn, MPI_Delete_function delete_fn, int *keyval_out,
+                       void *extra_state, enum F77_handle_type type);
+int MPII_Keyval_free(int keyval);
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op);
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type);
 int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);

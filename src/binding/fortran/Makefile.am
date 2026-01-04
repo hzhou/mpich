@@ -28,7 +28,7 @@ lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
 lib_lib@MPIFCLIBNAME@_la_SOURCES =
 modinc_HEADERS = $(mpi_fc_modules)
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
-lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
+lib_lib@MPIFCLIBNAME@_la_LIBADD = $(mpi_libs) $(mpifort_convenience_libs)
 
 if BUILD_F77_BINDING
 if BUILD_FC_BINDING

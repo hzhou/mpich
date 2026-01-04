@@ -52,7 +52,7 @@ def main():
     else:
         # mpi.h.in from mpich, contains autoconf variables
         load_mpi_h_in(G.get_srcdir_path("src/include/mpi_mpich.h.in"))
-    f = "%s/mpif.h.in" % G.f77_dir
+    f = "%s/mpif.h" % G.f77_dir
     dump_mpif_h(f)
 
 # ---------------------------------------------------------

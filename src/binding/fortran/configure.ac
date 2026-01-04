@@ -20,6 +20,8 @@ AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
             [Specify the path where MPI is installed.])],,with_mpi=mpich)
 
 mpi_h=
+mpi_libs=
+AC_SUBST(mpi_libs)
 if test "$with_mpi" = "mpich" ; then
     # We expect the following vars to be set from parent configure
     # MPI_MAX_PROCESSOR_NAME, MPI_MAX_LIBRARY_VERSION_STRING, MPI_MAX_ERROR_STRING, BSEND_OVERHEAD
@@ -34,6 +36,14 @@ else
     fi
     PAC_APPEND_FLAG(-I${with_mpi}/include, [CPPFLAGS])
     mpi_h="$with_mpi/include/mpi.h"
+
+    if test -e "$with_mpi/lib/libmpi.so" ; then
+        PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
+        mpi_libs="-lmpi"
+    elif test -e "$with_mpi/lib/libmpi_abi.so" ; then
+        PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
+        mpi_libs="-lmpi_abi"
+    fi
 fi
 
 # Find a C compiler.
@@ -928,12 +938,10 @@ AC_CONFIG_FILES([Makefile \
                  localdefs])
 
 if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([mpif_h/mpif.h \
-                     mpif_h/setbotf.f \
+    AC_CONFIG_FILES([mpif_h/setbotf.f \
                      mpif_h/setbot.c])
 fi
 if test "$enable_f08" = "yes" ; then
-    AC_CONFIG_FILES([use_mpi_f08/mpi_f08_compile_constants.f90 \
-                     use_mpi_f08/mpi_c_interface_types.f90])
+    AC_CONFIG_FILES([use_mpi_f08/mpi_c_interface_types.f90])
 fi
 AC_OUTPUT

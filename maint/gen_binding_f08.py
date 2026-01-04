@@ -157,7 +157,7 @@ def main():
     else:
         # mpi.h.in from mpich, contains autoconf variables
         load_mpi_h_in(G.get_srcdir_path("src/include/mpi_mpich.h.in"))
-    f = "%s/mpi_f08_compile_constants.f90.in" % G.f08_dir
+    f = "%s/mpi_f08_compile_constants.f90" % G.f08_dir
     dump_compile_constants_f90(f)
 
 # ---------------------------------------------------------

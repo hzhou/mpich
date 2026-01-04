@@ -1740,8 +1740,11 @@ def load_mpi_h_in(f):
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val
 
-"""load_mpi_h - it loads mpi.h that follows the format of upstream mpi.h
-   from https://github.com/mpi-forum/mpi-abi-stubs."""
+"""load_mpi_h - loads mpi.h without autoconf substitutions. Since we
+   use regex, it only works with -
+   * mpi.h from https://github.com/mpi-forum/mpi-abi-stubs
+   * mpi.h from mpich
+"""
 def load_mpi_h(f):
     def hex_to_signed_int(s):
         val = int(s, 16)
@@ -1758,13 +1761,21 @@ def load_mpi_h(f):
                 # direct macros
                 (name, val) = RE.m.group(1, 2)
                 if RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
-                    # handle constants
+                    # handle constants - hex
                     (T, V) = RE.m.group(1, 2)
                     val = hex_to_signed_int(V)
                     val = "%s(%d) ! 0x%s" % (T, hex_to_signed_int(V), V)
+                elif RE.match(r'\(+(MPI_\w+)\)(\d+)', val):
+                    # handle constants - decimal
+                    (T, V) = RE.m.group(1, 2)
+                    val = "%s(%s)" % (T, V)
                 elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
                     # datatype aliases
                     val = G.mpih_defines[val]
+                elif RE.match(r'\(+MPI_Offset\)\s*(-?\d+)', val):
+                    val = RE.m.group(1)
+                elif RE.match(r'0x([0-9a-fA-F]+)\s*$', val):
+                    val = hex_to_signed_int(RE.m.group(1))
                 elif re.match(r'^(\d+)\s*$', val):
                     if re.match(r'MPI_MAX_', name):
                         # Fortran string buffer limit need be 1-less
