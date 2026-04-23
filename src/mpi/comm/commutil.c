@@ -598,7 +598,7 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
 
     subcomm->attr |= MPIR_COMM_ATTR__SUBCOMM;
 
-    subcomm->context_id = comm->context_id + context_offset;
+    subcomm->context_id = comm->context_id;
     subcomm->recvcontext_id = subcomm->context_id;
     subcomm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
 
