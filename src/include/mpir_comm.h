@@ -132,9 +132,16 @@ struct MPIR_Comm {
     int num_local;
     int external_rank;
     int num_external;
-    struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
-                                         * the same node as this process. */
-    struct MPIR_Comm *node_roots_comm;  /* Comm of root processes for other nodes. */
+    union {
+        /* top-level comm can have subcomms */
+        struct {
+            struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
+                                                 * the same node as this process. */
+            struct MPIR_Comm *node_roots_comm;  /* Comm of root processes for other nodes. */
+        } subcomms;
+        /* subcomm have proc table for rank translation into parent comm */
+        int *proc_table;
+    } u;
     int *intranode_table;       /* intranode_table[i] gives the rank in
                                  * node_comm of rank i in this comm or -1 if i
                                  * is not in this process' node_comm.

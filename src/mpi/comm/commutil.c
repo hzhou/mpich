@@ -739,8 +739,9 @@ MPIR_Comm *MPIR_Comm_get_node_comm(MPIR_Comm * comm)
         return MPIR_Process.comm_self;
     } else {
         /* TODO: construct node_comm on-demand */
-        MPIR_Assert(comm->node_comm);
-        return comm->node_comm;
+        MPIR_Assert(!(comm->attr & MPIR_COMM_ATTR__SUBCOMM));
+        MPIR_Assert(comm->u.subcomms.node_comm);
+        return comm->u.subcomms.node_comm;
     }
 }
 
@@ -758,8 +759,9 @@ MPIR_Comm *MPIR_Comm_get_node_roots_comm(MPIR_Comm * comm)
         return MPIR_Process.comm_self;
     } else {
         /* TODO: construct node_roots_comm on-demand */
-        MPIR_Assert(comm->node_roots_comm);
-        return comm->node_roots_comm;
+        MPIR_Assert(!(comm->attr & MPIR_COMM_ATTR__SUBCOMM));
+        MPIR_Assert(comm->u.subcomms.node_roots_comm);
+        return comm->u.subcomms.node_roots_comm;
     }
 }
 
