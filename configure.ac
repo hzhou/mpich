@@ -121,9 +121,6 @@ MPICH_VERSION=MPICH_VERSION_m4
 AC_SUBST([MPICH_VERSION])
 MPICH_RELEASE_DATE="MPICH_RELEASE_DATE_m4"
 AC_SUBST([MPICH_RELEASE_DATE])
-libmpi_so_version="libmpi_so_version_m4"
-AC_SUBST([libmpi_so_version])
-
 
 if test -z "$MPICH_VERSION" ; then
     AC_MSG_ERROR([MPICH_VERSION is empty, check maint/version.m4 for errors])
@@ -182,13 +179,6 @@ AC_ARG_WITH(custom-version-string,
             AS_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
 MPICH_CUSTOM_STRING=$with_custom_version_string
 AC_SUBST(MPICH_CUSTOM_STRING)
-
-# ABIVERSION is the name used by simplemake, so we reassign the
-# libmpi_so_version number to it
-ABIVERSION=${libmpi_so_version}
-export ABIVERSION
-export libmpi_so_version
-AC_SUBST(ABIVERSION)
 
 # Print out the configure options
 CONFIGURE_ARGUMENTS="$ac_configure_args"
@@ -495,7 +485,44 @@ AC_ARG_ENABLE(debuginfo,
 AC_ARG_ENABLE(mpi-abi,
         AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
         enable_mpi_abi=no)
+
+case "$enable_mpi_abi" in
+  yes)
+    enable_mpi_abi=yes
+    enable_mpich_abi=no
+    ABI_INFO="MPI ABI 1.0"
+    DEFAULT_MPI_ABI=yes
+    ;;
+  no)
+    enable_mpi_abi=no
+    enable_mpich_abi=yes
+    ABI_INFO="MPICH ABI"
+    DEFAULT_MPI_ABI=no
+    ;;
+  both|dual|mpich,mpi|mpi,mpich)
+    enable_mpi_abi=yes
+    enable_mpich_abi=yes
+    ABI_INFO="MPICH ABI, MPI ABI 1.0"
+    DEFAULT_MPI_ABI=no
+    ;;
+  *)
+    AC_MSG_ERROR([Error option --enable-mpi-abi=$enable_mpi_abi])
+    ;;
+esac
+
+dnl used in mpicc for whether to enable -mpi-abi option by default
+AC_SUBST([DEFAULT_MPI_ABI])
+
+if test "$enable_mpich_abi" = "no" ; then
+    # currently CXX and Fortran binding only works on MPICH ABI.
+    # TODO: make CXX and Fortran binding work on MPI ABI
+    enable_cxx=no
+    # temporarily disable fortran with mpi-abi (until we merge stand-alone fortran binding)
+    enable_fortran=no
+fi
+
 AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
+AM_CONDITIONAL([BUILD_MPICH_LIB], [test "$enable_mpich_abi" = "yes"])
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
@@ -503,16 +530,21 @@ AC_ARG_ENABLE(versioning,
         [enable_versioning=yes])
 
 if test "$enable_versioning" = "yes" ; then
-   ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
-   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_version_m4"
+    ABIVERSIONFLAGS="-version-info libmpi_so_version_m4"
+    ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_version_m4"
 else
    ABIVERSIONFLAGS="-avoid-version"
-   ABI_ABIVERSIONFLAGS="-avoid-version"
 fi
 export ABIVERSIONFLAGS
 AC_SUBST(ABIVERSIONFLAGS)
 export ABI_ABIVERSIONFLAGS
 AC_SUBST(ABI_ABIVERSIONFLAGS)
+
+# ABIVERSION is used in mpichinfo.h
+ABIVERSION="MPICH ABI libmpi_so_version_m4"
+ABI_ABIVERSION="MPI ABI libmpi_abi_so_version_m4"
+AC_SUBST(ABIVERSION)
+AC_SUBST(ABI_ABIVERSION)
 
 
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to
@@ -590,21 +622,6 @@ AC_ARG_ENABLE(multi-aliases,
 	AS_HELP_STRING([--enable-multi-aliases],
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
-
-AC_ARG_WITH([wrapper-dl-type],
-            [AS_HELP_STRING([--with-wrapper-dl-type],
-                            [Dynamic loading model for alternate MPI
-                             libraries, used when programs are linked
-                             by mpicc compiler wrappers.  This only
-                             applies when shared libraries are built.
-                             The default is "runpath"; use
-                             --with-wrapper-dl-type=rpath to force
-                             rpath; use --with-wrapper-dl-type=none to
-                             find shared libraries according to the
-                             rules for your system (e.g., in
-                             LD_LIBRARY_PATH)])],
-              [],[with_wrapper_dl_type=runpath])
-AC_SUBST([with_wrapper_dl_type])
 
 AC_ARG_ENABLE([long-double],
               [AS_HELP_STRING([--disable-long-double],
@@ -770,9 +787,6 @@ if test "$enable_fortran" = "no" ; then
     enable_f08=no
 fi
 
-# Python 3 is needed to generate Fortran bindings
-PAC_CHECK_PYTHON
-
 if test "$enable_fortran" != "no" ; then
     # suppress default "-g -O2" from AC_PROG_FC
     : ${FCFLAGS=""}
@@ -932,9 +946,6 @@ export MPICXXLIBNAME
 export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
 AC_SUBST(MPIFCLIBNAME)
-
-# We'll set FORTRAN_BINDING to 1 if we support Fortran
-FORTRAN_BINDING=0
 
 # enable-fast
 # strip off multiple options, separated by commas
@@ -1328,10 +1339,6 @@ if test "$enable_append_g" = "yes" ; then
     PAC_APPEND_FLAG([-g],[CXXFLAGS])
     PAC_APPEND_FLAG([-g],[FFLAGS])
     PAC_APPEND_FLAG([-g],[FCFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
 fi
 
 if test "$enable_asan" = "yes" ; then
@@ -1339,29 +1346,24 @@ if test "$enable_asan" = "yes" ; then
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CXXFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FCFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=address],[LDFLAGS])
+    dnl The sanitizer ldflags need be passed to wrapper or the user program will
+    dnl fail with "ASan runtime does not come first in initial library list"
+    PAC_APPEND_FLAG([-fsanitize=address],[WRAPPER_LDFLAGS])
 fi
 if test "$enable_ubsan" = "yes" ; then
     PAC_APPEND_FLAG([-fsanitize=undefined],[CFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[CXXFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[FFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[FCFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_LDFLAGS])
 fi
 if test "$enable_tsan" = "yes" ; then
     PAC_APPEND_FLAG([-fsanitize=thread],[CFLAGS])
     PAC_APPEND_FLAG([-fsanitize=thread],[CXXFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_CXXFLAGS])
     PAC_APPEND_FLAG([-fsanitize=thread],[LDFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_LDFLAGS])
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
@@ -1422,7 +1424,7 @@ elif test -f $devicedir/subconfigure.m4 ; then
     :
 else
     # Add the device to the configure list
-    devsubsystems="$devsubsystems $devicereldir"
+    subsystems="$subsystems $devicereldir"
     # Make device_name available to subdirs
 fi
 
@@ -2043,9 +2045,6 @@ if test "$enable_f77" = "yes" ; then
     bindings="$bindings f77"
     PAC_APPEND_CSV([mpif.h], [fortran_bindings])
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
-    # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
-    FORTRAN_BINDING=1
-
 fi
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90
@@ -2073,7 +2072,6 @@ libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
 
 if test "$enable_f90" = "yes" ; then
-    bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
     bindings="$bindings f90"
     PAC_APPEND_CSV([use mpi], [fortran_bindings])
 fi
@@ -2362,13 +2360,6 @@ if test "$enable_cxx" = "yes" ; then
     AC_DEFINE(HAVE_CXX_BINDING,1,[Define if C++ is supported])
     INCLUDE_MPICXX_H='#include "mpicxx.h"'
     AC_SUBST(INCLUDE_MPICXX_H)
-
-    # In order to support the Fortran datatypes within C++,
-    #
-    # FORTRAN_BINDING always has a CPP-time value of either 0 or 1,
-    # so that it may be used in #if statements without adding to
-    # the CPP name space
-    AC_SUBST(FORTRAN_BINDING)
 fi
 
 # we install mpicxx as long as CXX is defined. In the case of enable_cxx=no,
@@ -3383,36 +3374,6 @@ AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant 
 # We may wish to use a different approach
 MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
 AC_SUBST(MPI_OFFSET_TYPEDEF)
-#
-# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT)
-# and is needed in mpif.h.in.
-# First, we check that this works with both Fortran compilers (if
-# they are defined)
-#
-if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
-    FORTRAN_MPI_OFFSET="INTEGER(KIND=$OFFSET_KIND)"
-
-    AC_LANG_PUSH([Fortran 77])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_f77_offsettype=yes],[has_f77_offsetype=no])
-    AC_MSG_RESULT($has_f77_offsettype)
-    AC_LANG_POP([Fortran 77])
-
-    AC_LANG_PUSH([Fortran])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 90])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_fc_offsettype=yes],[has_fc_offsetype=no])
-    AC_LANG_POP([Fortran])
-    AC_MSG_RESULT($has_fc_offsettype)
-
-    if test "$has_f77_offsettype" != yes -o "$has_fc_offsettype" != yes ; then
-        AC_MSG_WARN([mpif.h is not compatible with both $F77 $FFLAGS and $FC $FCFLAGS.  We recommend that you set both F77 and FC to the same compiler and reconfigure.])
-    fi
-fi
-AC_SUBST(FORTRAN_MPI_OFFSET)
 
 # ------------
 # MPI_COUNT
@@ -3991,9 +3952,8 @@ fi
 dnl "configure" the device here via subconfigure.m4 files
 m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
-# now configure any actual recursively configures subsystems, such as ROMIO and
-# hydra, or older components that haven't been updated to a subconfigure.m4 yet
-for subsys in $devsubsystems $subsystems ; do
+# We explicitly configure most modules now. $subsystems only contains hydra and nameserv/* (if configured).
+for subsys in $subsystems ; do
     PAC_CONFIG_SUBDIR_ARGS([$subsys],[$subsys_config_args],[],[AC_MSG_ERROR([$subsys configure failed])])
 done
 if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
@@ -4001,34 +3961,9 @@ if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
 fi
 dnl PAC_SUBDIR_CACHE_CLEANUP
 
-# Make subsystems available to makefiles.
-# FIXME does the makefile actually need this?
-subsystems="$devsubsystems $subsystems $bindingsubsystems"
-
 # MPI_STATUS_SIZE is hardcoded and need to be synchronized with mpi.h
 MPI_STATUS_SIZE=5
 AC_SUBST([MPI_STATUS_SIZE])
-
-if test "$enable_f77" = yes ; then
-    # Check if multiple __attribute__((alias)) is available
-    # This test requires MPI_STATUS_SIZE, and thus must be made after
-    # MPI_STATUS_SIZE is determined
-    if test "$enable_multi_aliases" = "yes" ; then
-        PAC_C_MULTI_ATTR_ALIAS
-        if test "$pac_c_multi_attr_alias" = "yes" ; then
-            PAC_F2C_ATTR_ALIGNED_SIZE([1],[CMB_1INT_ALIGNMENT])
-            AC_SUBST(CMB_1INT_ALIGNMENT)
-            PAC_F2C_ATTR_ALIGNED_SIZE([$MPI_STATUS_SIZE],[CMB_STATUS_ALIGNMENT],
-                                      [32])
-            AC_SUBST(CMB_STATUS_ALIGNMENT)
-            if test "X$CMB_1INT_ALIGNMENT" != "X" \
-                 -a "X$CMB_STATUS_ALIGNMENT" != "X" ; then
-                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
-                    [Define if multiple __attribute__((alias)) are supported])
-            fi
-        fi
-    fi
-fi
 
 # -----------------------------------------------------------------------------
 # enable_nolocal option may get overwritten by device subconfigure, e.g. with "with_ch4_shmmods=none"
@@ -4087,16 +4022,20 @@ export MPI_NO_RMA
 # Attach program prefix and suffix to executable names for Makefile
 AC_SUBST(MPICC_NAME)
 AC_SUBST(MPICC_ABI_NAME)
+AC_SUBST(MPICC_MPICH_NAME)
 AC_SUBST(MPICXX_NAME)
 AC_SUBST(MPICXX_ABI_NAME)
+AC_SUBST(MPICXX_MPICH_NAME)
 AC_SUBST(MPICPP_NAME)
 AC_SUBST(MPIFORT_NAME)
 AC_SUBST(MPIF90_NAME)
 AC_SUBST(MPIF77_NAME)
 PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpicc_abi", MPICC_ABI_NAME)
+PAC_GET_EXENAME("mpicc_mpich", MPICC_MPICH_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
 PAC_GET_EXENAME("mpicxx_abi", MPICXX_ABI_NAME)
+PAC_GET_EXENAME("mpicxx_mpich", MPICXX_MPICH_NAME)
 PAC_GET_EXENAME("mpic++", MPICPP_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpif90", MPIF90_NAME)
@@ -4273,16 +4212,30 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
-if test "$enable_f90" = "yes" ; then
-    PAC_FC_CHECK_IGNORE_TKR
-    PAC_FC_ISO_C_BINDING
+dnl If bindings have been pre-generated, one may use this option to skip re-generating the bindings.
+dnl
+AC_ARG_ENABLE([gen-bindings], [AS_HELP_STRING([--disable-gen-bindings], [skip generating bindings])],
+    [enable_gen_bindings=$enableval], [enable_gen_bindings=yes])
+
+if test "$enable_gen_bindings" = "yes" ; then
+    # Python 3 is needed to generate Fortran bindings
+    PAC_CHECK_PYTHON
     if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
-            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
-        fi
-    else
+        AC_MSG_ERROR([Python 3 is required to generate Fortran bindings but not found!])
+    fi
+
+    # use AC_CONFIG_COMMANDS_POST to ensures mpi.h is already generated
+    if test "$enable_f77" = "yes" ; then
+        cmd_f77="$PYTHON $srcdir/maint/gen_binding_f77.py"
+        cmd_f77="$cmd_f77 -mpi-h=src/include/mpi.h"
+        cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
+        AC_CONFIG_COMMANDS_POST([$cmd_f77])
+    fi
+
+    if test "$enable_f90" = "yes" ; then
+        PAC_FC_CHECK_IGNORE_TKR
+        PAC_FC_ISO_C_BINDING
+
         cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
         # pass in type sizes for MPI_SIZEOF
         cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
@@ -4292,21 +4245,15 @@ if test "$enable_f90" = "yes" ; then
         if test "$pac_fc_iso_c_binding" = "no" ; then
             cmd_f90="$cmd_f90 -iso-c-binding=no"
         fi
-        AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
+        AC_CONFIG_COMMANDS_POST([$cmd_f90])
     fi
-fi
 
-if test "$enable_f08" = "yes" ; then
-    PAC_FC_CHECK_REAL128
-    PAC_FC_CHECK_IGNORE_TKR_D
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
-            AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F08 bindings but not found!])
-        fi
-    else
+    if test "$enable_f08" = "yes" ; then
+        PAC_FC_CHECK_REAL128
+        PAC_FC_CHECK_IGNORE_TKR_D
+
         cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py"
+        cmd_f08="$cmd_f08 -mpi-h=src/include/mpi.h"
         if test "$pac_fc_has_real128" = "no" ; then
             cmd_f08="$cmd_f08 -no-real128"
         fi
@@ -4317,7 +4264,8 @@ if test "$enable_f08" = "yes" ; then
             cmd_f08="$cmd_f08 -no-mpiio"
         fi
         cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
-        AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd_f08"])
+        cmd_f08="$cmd_f08 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
+        AC_CONFIG_COMMANDS_POST([$cmd_f08])
     fi
 fi
 
@@ -4346,28 +4294,21 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
+          src/include/mpi_fortran.h \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests \
           packaging/pkgconfig/mpich.pc \
           packaging/envmods/mpich.module])
-if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h \
-                     src/binding/fortran/mpif_h/setbotf.f \
-                     src/binding/fortran/mpif_h/setbot.c])
-fi
-if test "$enable_f08" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
-                     src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90])
-fi
 AC_OUTPUT
 
-# TODO: add info about MPI ABI
 cat <<EOF
 *****************************************************
 ***
 *** MPICH $MPICH_VERSION ($MPICH_RELEASE_DATE)
+***
+*** ABI: $ABI_INFO
 ***
 *** Language Support
 *** ----------------
