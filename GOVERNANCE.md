@@ -6,25 +6,27 @@ The MPICH Project adopts a flexible hybrid governance model consisting of a
 Technical Core Team (TCT) and a Technical Steering Committee (TSC).
 
 The Technical Core Team is responsible for the day-to-day technical development
-and maintenance of MPICH. Technical Core Team members are generally those granted at least _Maintain_
-permission on the MPICH GitHub project. Technical Core Team members may make routine
-technical decisions within their areas of responsibility. While review and
-discussion are strongly encouraged, the level of process required may vary
-depending on the scope, urgency, and impact of a change.
+and maintenance of MPICH. Technical Core Team members are generally those
+granted at least _Maintain_ permission on the MPICH GitHub project. Technical
+Core Team members may make routine technical decisions within their areas of
+responsibility. While review and discussion are strongly encouraged, the level
+of process required may vary depending on the scope, urgency, and impact of a
+change.
 
-The Technical Steering Committee provides strategic guidance and community oversight. The
-committee may be convened to discuss significant technical, organizational, or
-policy matters affecting the project. Through the voting process defined below,
-the committee may affirm, modify, or overturn decisions made by the Technical
-Core Team.
+The Technical Steering Committee provides strategic guidance and community
+oversight. The committee may be convened to discuss significant technical,
+organizational, or policy matters affecting the project. Through the voting
+process defined below, the committee may affirm, modify, or overturn decisions
+made by the Technical Core Team.
 
 The governance model is intentionally lightweight and is designed to balance
 efficient project development with broad community participation.
 
 ## Technical Core Team
 
-The Technical Core Team consists of members who have at least _Maintain_ permission on the MPICH GitHub project.
-The current members of the Technical Core Team are:
+The Technical Core Team consists of members who have at least _Maintain_
+permission on the MPICH GitHub project.  The current members of the Technical
+Core Team are:
 
 - Hui Zhou, @hzhou, Argonne National Laboratory
 - Rajeev Thakur, @rsth, Argonne National Laboratory
@@ -37,12 +39,22 @@ the existing Technical Core Team.
 
 ## Technical Steering Committee
 ### Role
-The role of the Technical Steering Committee (TSC) is to provide technical direction to the project. The TSC will vote on any matters deferred by the Technical Core Team or issues raised by the community.
+The role of the Technical Steering Committee (TSC) is to provide technical
+direction to the project. The TSC will vote on any matters deferred by the
+Technical Core Team or issues raised by the community.
 
-Each member of the TSC has one vote. Votes may be cast during the voting meeting or asynchronously within 48 hours after the meeting. A member may delegate their vote to a proxy, subject to unanimous approval by the voting meeting. The threshold for passing is a majority vote calculated over the total TSC membership, including absentees.
+Each member of the TSC has one vote. Votes may be cast during the voting meeting
+or asynchronously within 48 hours after the meeting. A member may delegate their
+vote to a proxy, subject to unanimous approval by the voting meeting. The
+threshold for passing is a majority of the total TSC membership (including
+absentees members) is needed to pass a motion.
 
 ### Membership
-Members can be added to the TSC by a majority vote of the TSC. Members may be removed from the TSC by a 2/3 vote of the TSC. If a TSC member has been inactive for over 6 months, as measured from the last time the member failed to respond to a formal query from the TSC, the TSC must hold a vote on whether to remove that member from the TSC.
+Members can be added to the TSC by a majority vote of the TSC. Members may be
+removed from the TSC by a 2/3 vote of the TSC. If a TSC member has been inactive
+for over 6 months, as measured from the last time the member failed to respond
+to a formal query from the TSC, the TSC must hold a vote on whether to remove
+that member from the TSC.
 
 Current Membership:
 
@@ -55,14 +67,17 @@ Current Membership:
 7. Simon Pickartz (ParTec AG)
 
 ### TSC Chair
-The TSC will elect a chair annually. The TSC chair runs TSC meetings and may make interim decisions on urgent matters on behalf of the TSC, which may be reviewed by the TSC at its next meeting.
+The TSC will elect a chair annually. The TSC chair runs TSC meetings and may
+make interim decisions on urgent matters on behalf of the TSC, which may be
+reviewed by the TSC at its next meeting.
 
 Current chair:
 
   * Rajeev Thakur (Argonne National Laboratory)
 
 ### Meetings and Notes
-The TSC convenes twice a year. Additional meetings may be held as needed. Meeting notes will be published on the MPICH GitHub wiki.
+The TSC convenes twice a year. Additional meetings may be held as needed.
+Meeting notes will be published on the MPICH GitHub wiki.
 
 -------------------------------------------------------------------
 [NOTE: changes to this document up to this point require TSC voting]
@@ -70,7 +85,9 @@ The TSC convenes twice a year. Additional meetings may be held as needed. Meetin
 ## Other Public MPICH forums
 
 ### Weekly MPICH development meetings
-Public MPICH development meetings are held every Thursday at 9am Central Time. These meetings are held virtually. Meeting agenda and meeting links are announced at least one day ahead via devel@lists.mpich.org.
+Public MPICH development meetings are held every Thursday at 9am Central Time.
+These meetings are held virtually. Meeting agenda and meeting links are
+announced at least one day ahead via devel@lists.mpich.org.
 
 ### MPICH website
 [mpich.org](https://mpich.org)
@@ -81,8 +98,10 @@ Public MPICH development meetings are held every Thursday at 9am Central Time. T
 * discuss@lists.mpich.org - MPICH general discussion mailing list
 
 ### MPICH Slack
-The MPICH project uses #mpich-dev Slack channel for online discussions between MPICH developers. Access to the Slack channel can be requested via devel@lists.mpich.org.
+The MPICH project uses #mpich-dev Slack channel for online discussions between
+MPICH developers. Access to the Slack channel can be requested via
+devel@lists.mpich.org.
 
 ### MPICH Github
-MPICH issues, pull requests, and long term discussions are tracked on the MPICH GitHub page.
-
+MPICH issues, pull requests, and long term discussions are tracked on the MPICH
+GitHub page.
